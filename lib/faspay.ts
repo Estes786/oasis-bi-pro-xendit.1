@@ -81,15 +81,21 @@ export const SUBSCRIPTION_PLANS = {
 
 /**
  * Generate SNAP Signature for API Request
- * Algorithm: SHA256withRSA(Private_Key, stringToSign)
+ * Algorithm: HMAC-SHA512 for Request Signature
  * 
- * Formula: HTTPMethod + ":" + EndpointUrl + ":" + Lowercase(HexEncode(SHA256(minify(RequestBody)))) + ":" + TimeStamp
+ * SNAP Request Signature Formula:
+ * HMAC-SHA512(clientSecret, stringToSign)
+ * where stringToSign = HTTPMethod + ":" + RelativeUrl + ":" + AccessToken + ":" + Lowercase(HexEncode(SHA256(minify(RequestBody)))) + ":" + Timestamp
+ * 
+ * For Faspay SNAP, we use simplified format:
+ * stringToSign = HTTPMethod + ":" + EndpointUrl + ":" + Lowercase(HexEncode(SHA256(minify(RequestBody)))) + ":" + Timestamp
  */
 export function generateSnapSignature(
   httpMethod: string,
   endpointUrl: string,
   requestBody: object,
-  timestamp: string
+  timestamp: string,
+  accessToken: string = ''
 ): string {
   try {
     // STEP 1: Minify request body (remove whitespace)
@@ -103,7 +109,10 @@ export function generateSnapSignature(
       .toLowerCase()
     
     // STEP 3: Create stringToSign
-    const stringToSign = `${httpMethod}:${endpointUrl}:${bodyHash}:${timestamp}`
+    // Format: HTTPMethod:EndpointUrl:AccessToken:BodyHash:Timestamp
+    const stringToSign = accessToken 
+      ? `${httpMethod}:${endpointUrl}:${accessToken}:${bodyHash}:${timestamp}`
+      : `${httpMethod}:${endpointUrl}:${bodyHash}:${timestamp}`
     
     console.log('🔐 SNAP Signature Generation:')
     console.log('   HTTP Method:', httpMethod)
@@ -112,28 +121,12 @@ export function generateSnapSignature(
     console.log('   Timestamp:', timestamp)
     console.log('   String to Sign:', stringToSign)
     
-    // STEP 4: Sign with SHA256withRSA using private key
-    // NOTE: For SNAP Sandbox without real RSA keys, we'll use simulated signature
-    // In production, you MUST use real RSA private key
-    
-    if (!FASPAY_CONFIG.privateKey) {
-      // FALLBACK: Generate deterministic signature for testing
-      // CRITICAL: This is NOT secure! Only for sandbox testing without RSA setup
-      console.warn('⚠️ WARNING: Using fallback signature (no RSA private key)')
-      const fallbackSignature = crypto
-        .createHash('sha256')
-        .update(stringToSign + FASPAY_CONFIG.password)
-        .digest('base64')
-      
-      return fallbackSignature
-    }
-    
-    // PRODUCTION CODE: Use RSA private key
-    const sign = crypto.createSign('RSA-SHA256')
-    sign.update(stringToSign)
-    sign.end()
-    
-    const signature = sign.sign(FASPAY_CONFIG.privateKey, 'base64')
+    // STEP 4: Sign with HMAC-SHA512 using merchant password as secret
+    // For Faspay SNAP, password acts as the client secret
+    const signature = crypto
+      .createHmac('sha512', FASPAY_CONFIG.password)
+      .update(stringToSign)
+      .digest('base64')
     
     console.log('   Signature (Base64):', signature.substring(0, 50) + '...')
     
@@ -180,6 +173,61 @@ export function verifyFaspayLegacyCallback(
     
   } catch (error) {
     console.error('❌ Signature verification error:', error)
+    return false
+  }
+}
+
+/**
+ * Verify SNAP callback signature
+ * Formula: HMAC-SHA256(clientSecret, stringToSign)
+ * where stringToSign = HTTPMethod + ":" + EndpointUrl + ":" + AccessToken + ":" + Lowercase(HexEncode(SHA256(RequestBody))) + ":" + Timestamp
+ */
+export function verifySnapCallback(
+  httpMethod: string,
+  endpointUrl: string,
+  requestBody: object | string,
+  timestamp: string,
+  receivedSignature: string,
+  accessToken: string = ''
+): boolean {
+  try {
+    // Minify body if it's an object
+    const bodyString = typeof requestBody === 'string' 
+      ? requestBody 
+      : JSON.stringify(requestBody)
+    
+    // SHA256 hash the body
+    const bodyHash = crypto
+      .createHash('sha256')
+      .update(bodyString)
+      .digest('hex')
+      .toLowerCase()
+    
+    // Create stringToSign
+    const stringToSign = accessToken
+      ? `${httpMethod}:${endpointUrl}:${accessToken}:${bodyHash}:${timestamp}`
+      : `${httpMethod}:${endpointUrl}:${bodyHash}:${timestamp}`
+    
+    // Calculate expected signature using HMAC-SHA256
+    const expectedSignature = crypto
+      .createHmac('sha256', FASPAY_CONFIG.password)
+      .update(stringToSign)
+      .digest('base64')
+    
+    console.log('🔍 SNAP Callback Verification:')
+    console.log('   HTTP Method:', httpMethod)
+    console.log('   Endpoint:', endpointUrl)
+    console.log('   Body Hash:', bodyHash)
+    console.log('   Timestamp:', timestamp)
+    console.log('   String to Sign:', stringToSign)
+    console.log('   Expected Signature:', expectedSignature.substring(0, 50) + '...')
+    console.log('   Received Signature:', receivedSignature.substring(0, 50) + '...')
+    console.log('   Match:', expectedSignature === receivedSignature)
+    
+    return expectedSignature === receivedSignature
+    
+  } catch (error) {
+    console.error('❌ SNAP signature verification error:', error)
     return false
   }
 }
@@ -337,3 +385,113 @@ export const FASPAY_STATUS = {
 } as const
 
 export type FaspayStatus = typeof FASPAY_STATUS[keyof typeof FASPAY_STATUS]
+
+/**
+ * Create Faspay SNAP QRIS Dynamic (E-Wallet MPM)
+ * MPM = Merchant Presented Mode (Customer scans merchant QR)
+ */
+export interface FaspayQRISRequest {
+  merchantOrderId: string
+  paymentAmount: number
+  productDetails: string
+  email: string
+  phoneNumber: string
+  customerName: string
+  planId: keyof typeof SUBSCRIPTION_PLANS
+  userId?: string
+}
+
+export async function createFaspayQRIS(data: FaspayQRISRequest) {
+  const { merchantId, partnerId, channelId, baseUrl } = FASPAY_CONFIG
+  
+  try {
+    // Generate timestamp in ISO 8601 format
+    const timestamp = new Date().toISOString()
+    
+    // Generate unique external ID
+    const externalId = generateExternalId()
+    
+    // Prepare request body for QRIS
+    const requestBody = {
+      partnerReferenceNo: data.merchantOrderId,
+      amount: {
+        value: data.paymentAmount.toFixed(2),
+        currency: 'IDR'
+      },
+      merchantId: merchantId,
+      storeLabel: 'OASIS BI PRO',
+      terminalLabel: 'WEB',
+      validityPeriod: '2024-12-31T23:59:59+07:00', // Default expiry
+      additionalInfo: {
+        customerName: data.customerName,
+        customerEmail: data.email,
+        customerPhone: data.phoneNumber,
+        billDescription: data.productDetails,
+        billDate: timestamp
+      }
+    }
+    
+    // Generate SNAP signature
+    const endpoint = '/v1.0/qr/qr-mpm-generate'
+    const signature = generateSnapSignature('POST', endpoint, requestBody, timestamp)
+    
+    // Prepare headers
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-TIMESTAMP': timestamp,
+      'X-SIGNATURE': signature,
+      'ORIGIN': 'www.oasis-bi-pro.web.id',
+      'X-PARTNER-ID': partnerId,
+      'X-EXTERNAL-ID': externalId,
+      'CHANNEL-ID': channelId
+    }
+    
+    console.log('📤 Faspay SNAP Create QRIS Request:')
+    console.log('   URL:', `${baseUrl}${endpoint}`)
+    console.log('   Headers:', headers)
+    console.log('   Body:', requestBody)
+    
+    const response = await fetch(`${baseUrl}${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(requestBody),
+    })
+    
+    const result = await response.json()
+    
+    console.log('📥 Faspay QRIS Response:', result)
+    
+    if (!response.ok) {
+      throw new Error(`Faspay API Error (${response.status}): ${result.responseMessage || result.message || 'Unknown error'}`)
+    }
+    
+    // Check response code
+    if (result.responseCode !== '2002500') {
+      throw new Error(`Faspay QRIS Creation Failed: ${result.responseMessage} (${result.responseCode})`)
+    }
+    
+    // Extract QR data
+    const qrData = result.qrContent || result.qrCode
+    const qrUrl = result.qrUrl
+    
+    return {
+      success: true,
+      data: result,
+      qrContent: qrData,
+      qrUrl: qrUrl,
+      reference: result.referenceNo || data.merchantOrderId,
+      expiryDate: result.validityPeriod,
+    }
+    
+  } catch (error) {
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('💥 FASPAY QRIS CREATION ERROR')
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error(error)
+    
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}

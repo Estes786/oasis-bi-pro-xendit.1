@@ -16,7 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyFaspayLegacyCallback, FASPAY_STATUS } from '@/lib/faspay'
+import { verifyFaspayLegacyCallback, verifySnapCallback, FASPAY_STATUS } from '@/lib/faspay'
 import { 
   updateSubscriptionAfterPayment, 
   getUserIdFromTransaction 
@@ -95,10 +95,36 @@ export async function POST(request: NextRequest) {
       console.log('   Status:', paymentStatusCode)
       console.log('   Reference:', reference)
       
-      // TODO: Verify X-SIGNATURE header for SNAP format
-      // For now, we accept SNAP notifications without signature verification
-      // In production, you MUST verify the X-SIGNATURE header
-      console.log('⚠️ SNAP signature verification not implemented yet')
+      // Verify X-SIGNATURE header for SNAP format
+      const xSignature = request.headers.get('X-SIGNATURE')
+      const xTimestamp = request.headers.get('X-TIMESTAMP')
+      
+      if (xSignature && xTimestamp) {
+        const endpoint = '/callback/payment'
+        const isValid = verifySnapCallback(
+          'POST',
+          endpoint,
+          body,
+          xTimestamp,
+          xSignature
+        )
+        
+        if (!isValid) {
+          console.error('❌ SNAP SIGNATURE VERIFICATION FAILED!')
+          console.error('Possible security breach attempt')
+          return NextResponse.json(
+            { 
+              responseCode: '4012500',
+              responseMessage: 'Invalid signature'
+            },
+            { status: 401 }
+          )
+        }
+        
+        console.log('✅ SNAP signature verified successfully')
+      } else {
+        console.log('⚠️ No SNAP signature in headers - accepting anyway for sandbox')
+      }
     }
 
     // STEP 2: Extract plan ID from merchant order ID

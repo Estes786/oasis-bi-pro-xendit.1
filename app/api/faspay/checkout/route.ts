@@ -11,10 +11,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { 
-  createFaspayVADynamic, 
+  createFaspayVADynamic,
+  createFaspayQRIS,
   generateMerchantOrderId,
   SUBSCRIPTION_PLANS,
-  type FaspayPaymentRequest 
+  type FaspayPaymentRequest,
+  type FaspayQRISRequest
 } from '@/lib/faspay'
 
 export async function POST(request: NextRequest) {
@@ -22,7 +24,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // Validate required fields
-    const { planId, email, phoneNumber, customerName, userId } = body
+    const { planId, email, phoneNumber, customerName, userId, paymentMethod = 'va' } = body
     
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log('🛒 FASPAY CHECKOUT REQUEST RECEIVED')
@@ -70,24 +72,60 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('📤 Calling Faspay SNAP API...')
+    console.log('💳 Payment Method:', paymentMethod)
     
-    // Call Faspay SNAP API
-    const result = await createFaspayVADynamic(paymentRequest)
+    // Call Faspay SNAP API based on payment method
+    let result: any
     
-    if (!result.success) {
-      console.error('❌ Faspay API call failed:', result.error)
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: result.error 
-        },
-        { status: 500 }
-      )
-    }
+    if (paymentMethod === 'qris' || paymentMethod === 'ewallet') {
+      // Create QRIS for E-Wallet payment
+      const qrisRequest: FaspayQRISRequest = {
+        merchantOrderId,
+        paymentAmount: plan.price,
+        productDetails: `${plan.name} - OASIS BI PRO Subscription`,
+        email,
+        phoneNumber,
+        customerName,
+        planId: planId as keyof typeof SUBSCRIPTION_PLANS,
+        userId: userId || undefined,
+      }
+      
+      result = await createFaspayQRIS(qrisRequest)
+      
+      if (!result.success) {
+        console.error('❌ Faspay QRIS API call failed:', result.error)
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: result.error 
+          },
+          { status: 500 }
+        )
+      }
+      
+      console.log('✅ QR Code generated:', result.qrContent ? 'Yes' : 'No')
+      console.log('✅ QR URL:', result.qrUrl)
+      console.log('✅ Faspay Reference:', result.reference)
+      
+    } else {
+      // Default: Create VA Dynamic
+      result = await createFaspayVADynamic(paymentRequest)
+      
+      if (!result.success) {
+        console.error('❌ Faspay API call failed:', result.error)
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: result.error 
+          },
+          { status: 500 }
+        )
+      }
 
-    console.log('✅ VA Number generated:', result.virtualAccountNo)
-    console.log('✅ Redirect URL:', result.redirectUrl)
-    console.log('✅ Faspay Reference:', result.reference)
+      console.log('✅ VA Number generated:', result.virtualAccountNo)
+      console.log('✅ Redirect URL:', result.redirectUrl)
+      console.log('✅ Faspay Reference:', result.reference)
+    }
     
     // Create pending transaction in database (if userId provided)
     if (userId) {
@@ -131,18 +169,27 @@ export async function POST(request: NextRequest) {
     console.log('✅ FASPAY CHECKOUT COMPLETED SUCCESSFULLY')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
-    // Return VA info and redirect URL
+    // Return payment info based on method
+    const responseData: any = {
+      paymentMethod,
+      reference: result.reference,
+      merchantOrderId,
+      amount: plan.price,
+      planName: plan.name,
+      expiryDate: result.expiryDate,
+    }
+    
+    if (paymentMethod === 'qris' || paymentMethod === 'ewallet') {
+      responseData.qrContent = result.qrContent
+      responseData.qrUrl = result.qrUrl
+    } else {
+      responseData.virtualAccountNo = result.virtualAccountNo
+      responseData.redirectUrl = result.redirectUrl
+    }
+
     return NextResponse.json({
       success: true,
-      data: {
-        virtualAccountNo: result.virtualAccountNo,
-        redirectUrl: result.redirectUrl,
-        reference: result.reference,
-        merchantOrderId,
-        amount: plan.price,
-        planName: plan.name,
-        expiryDate: result.expiryDate,
-      }
+      data: responseData
     })
 
   } catch (error) {

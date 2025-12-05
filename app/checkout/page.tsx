@@ -36,16 +36,21 @@ function CheckoutContent() {
   const loadPaymentMethods = async () => {
     if (!plan) return;
     
-    setLoadingMethods(true);
-    try {
-      const response = await axios.get(`/api/duitku/payment-methods?amount=${plan.price}`);
-      setPaymentMethods(response.data.paymentMethods || []);
-    } catch (error) {
-      console.error('Failed to load payment methods:', error);
-      alert('Gagal memuat metode pembayaran. Silakan coba lagi.');
-    } finally {
-      setLoadingMethods(false);
-    }
+    // Faspay SNAP payment methods (hardcoded - no need to fetch)
+    setPaymentMethods([
+      {
+        paymentMethod: 'va',
+        paymentName: 'Virtual Account',
+        paymentImage: '/payment-icons/va.png',
+        totalFee: 0,
+      },
+      {
+        paymentMethod: 'qris',
+        paymentName: 'QRIS / E-Wallet',
+        paymentImage: '/payment-icons/qris.png',
+        totalFee: 0,
+      }
+    ]);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,18 +97,31 @@ function CheckoutContent() {
 
     setLoading(true);
     try {
-      const response = await axios.post('/api/duitku/create-payment', {
-        planType: selectedPlan,
-        amount: plan.price,
+      // Call Faspay SNAP checkout API
+      const response = await axios.post('/api/faspay/checkout', {
+        planId: selectedPlan,
+        email: formData.customerEmail,
+        phoneNumber: formData.customerPhone,
         customerName: formData.customerName,
-        customerEmail: formData.customerEmail,
-        customerPhone: formData.customerPhone,
         paymentMethod: selectedPaymentMethod,
       });
 
-      if (response.data.success && response.data.paymentUrl) {
-        // Redirect to Duitku payment page
-        window.location.href = response.data.paymentUrl;
+      if (response.data.success) {
+        const { data } = response.data;
+        
+        // Handle based on payment method
+        if (selectedPaymentMethod === 'qris' && data.qrUrl) {
+          // Redirect to QR page or display QR code
+          window.location.href = data.qrUrl;
+        } else if (data.redirectUrl) {
+          // Redirect to Faspay payment page for VA
+          window.location.href = data.redirectUrl;
+        } else if (data.virtualAccountNo) {
+          // Show VA number in success page
+          alert(`Virtual Account: ${data.virtualAccountNo}\nSilakan transfer sejumlah ${data.amount} IDR`);
+        } else {
+          alert('Pembayaran berhasil dibuat. Silakan cek email Anda untuk instruksi lebih lanjut.');
+        }
       } else {
         alert('Gagal membuat pembayaran. Silakan coba lagi.');
       }
