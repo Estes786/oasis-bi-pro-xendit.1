@@ -1,305 +1,343 @@
-# 🎯 OASIS BI PRO - Business Intelligence Platform
+# 🚀 OASIS BI PRO - Xendit Edition
 
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](https://github.com/Estes786/v0-v0oasisbiproduitkuv21mainmain-02-main-3-1-main-1-5-new)
-[![Build](https://img.shields.io/badge/Build-Passing-brightgreen)](https://github.com/Estes786/v0-v0oasisbiproduitkuv21mainmain-02-main-3-1-main-1-5-new)
-[![Integration](https://img.shields.io/badge/Duitku-Integrated-blue)](https://docs.duitku.com/)
-[![Database](https://img.shields.io/badge/Supabase-Connected-green)](https://supabase.com/)
+> **Business Intelligence SaaS Platform** dengan integrasi pembayaran Xendit
 
-A modern, professional-grade Business Intelligence SaaS platform with complete payment gateway integration.
+[![Next.js](https://img.shields.io/badge/Next.js-15.5.6-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Latest-green)](https://supabase.com/)
+[![Xendit](https://img.shields.io/badge/Xendit-API-orange)](https://xendit.co/)
 
 ---
 
-## ✨ Key Features
+## ✨ Fitur Utama
 
-### 🎨 **Modern User Interface**
-- Beautiful, responsive design with Tailwind CSS
-- Professional Business Intelligence dashboards
-- Real-time data visualization with Recharts
-- Mobile-first approach
+### 💳 Pembayaran Subscription
+- **Virtual Account**: BCA, Mandiri, BNI, BRI, Permata
+- **E-Wallet**: OVO, DANA, LinkAja
+- **Webhook Otomatis**: X-Callback-Token verification
+- **Auto-Activation**: Subscription langsung aktif setelah pembayaran sukses
 
-### 🔐 **Authentication & Security**
-- Secure authentication with Supabase Auth
-- Row Level Security (RLS) policies
-- JWT-based session management
-- MD5 signature verification for payments
-
-### 💳 **Payment Processing**
-- ✅ **Fully integrated Duitku Payment Gateway**
-- ✅ **Automatic subscription management**
-- ✅ **Real-time payment callbacks**
-- ✅ **Secure signature verification**
-- 3 subscription tiers (Starter, Professional, Enterprise)
-
-### 📊 **Business Intelligence**
-- Interactive analytics dashboards
-- Real-time metrics and KPIs
-- Custom report generation
-- Data source integrations
+### 📊 Business Intelligence
+- Dashboard interaktif dengan real-time analytics
+- Multiple data source connections
+- Advanced AI-powered insights
+- Custom reporting & visualisasi
 - Team collaboration features
 
-### 👥 **Team Management**
-- Multi-user support
-- Role-based access control
-- Team analytics and insights
-- Subscription management per team
+### 🔐 Keamanan
+- Supabase Authentication (Email/Password, OAuth)
+- Row Level Security (RLS) policies
+- Xendit webhook token verification
+- Encrypted environment variables
+- HTTPS-only API communications
 
 ---
 
-## 🚀 Quick Start
+## 🏗️ Tech Stack
 
-### Prerequisites
-- Node.js 18+ 
-- npm or pnpm
-- Supabase account
-- Duitku merchant account
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/Estes786/v0-v0oasisbiproduitkuv21mainmain-02-main-3-1-main-1-5-new.git
-cd webapp
-
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your credentials
-
-# Run database migrations
-# Apply APPLY_TO_SUPABASE.sql to your Supabase project
-
-# Start development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to see the application.
-
----
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Create a `.env.local` file with the following:
-
-```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-
-# Duitku
-NEXT_PUBLIC_DUITKU_MERCHANT_CODE=your-merchant-code
-DUITKU_API_KEY=your-api-key
-NEXT_PUBLIC_DUITKU_ENV=sandbox
-NEXT_PUBLIC_DUITKU_CALLBACK_URL=https://yourdomain.com/api/duitku/callback
-NEXT_PUBLIC_DUITKU_RETURN_URL=https://yourdomain.com/payment/success
-```
-
----
-
-## 📦 Tech Stack
-
+### Frontend
 - **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **State**: React Hooks
+
+### Backend
+- **Runtime**: Next.js API Routes (Serverless)
 - **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
-- **Payment**: Duitku Payment Gateway
-- **UI Components**: shadcn/ui
-- **Charts**: Recharts
-- **Deployment**: Vercel-ready
+- **Auth**: Supabase Auth
+- **Storage**: Supabase Storage
+
+### Payment Gateway
+- **Provider**: Xendit
+- **Methods**: Virtual Account, E-Wallet
+- **Security**: X-Callback-Token webhook verification
+- **Environment**: Test & Production modes
 
 ---
 
-## 🎯 Subscription Plans
+## 📦 Installation
 
-| Plan | Price | Features |
-|------|-------|----------|
-| **Starter** | Rp 99,000/mo | 5 dashboards, 10 data sources, Basic analytics |
-| **Professional** | Rp 299,000/mo | 50 dashboards, Unlimited data sources, Advanced AI |
-| **Enterprise** | Rp 999,000/mo | Unlimited everything, 24/7 support, SLA |
+### Prerequisites
+- Node.js 18+ and npm
+- Supabase account (https://supabase.com/)
+- Xendit account (https://xendit.co/)
+
+### 1. Clone Repository
+```bash
+git clone https://github.com/Estes786/oasis-bi-pro-xendit.1.git
+cd oasis-bi-pro-xendit.1
+```
+
+### 2. Install Dependencies
+```bash
+npm install
+```
+
+### 3. Environment Setup
+```bash
+# Copy environment template
+cp .env.example .env.local
+
+# Edit .env.local and add your credentials:
+# - Xendit Secret Key & Webhook Token
+# - Supabase URL & Keys
+# - Application URL
+```
+
+### 4. Run Development Server
+```bash
+npm run dev
+```
+
+Visit: http://localhost:3000
 
 ---
 
-## 📚 Documentation
-
-- **[DUITKU_INTEGRATION_COMPLETE.md](./DUITKU_INTEGRATION_COMPLETE.md)** - Complete Duitku integration guide
-- **[AUTONOMOUS_EXECUTION_SUCCESS.md](./AUTONOMOUS_EXECUTION_SUCCESS.md)** - Implementation details and test results
-- **[APPLY_TO_SUPABASE.sql](./APPLY_TO_SUPABASE.sql)** - Database schema
-
----
-
-## 🧪 Testing
-
-### Run Integration Tests
+## 🔧 Environment Variables
 
 ```bash
-# Test Duitku integration
-node test-duitku-integration.js
-```
+# Xendit (Required)
+XENDIT_SECRET_KEY=xnd_development_yourSecretKeyHere
+XENDIT_WEBHOOK_TOKEN=yourWebhookVerificationTokenHere
+XENDIT_ENV=test
+XENDIT_BASE_URL=https://api.xendit.co
 
-**Test Results:**
-```
-✅ Checkout Signature Generation - PASSED
-✅ Callback Signature Verification - PASSED
-✅ Order ID Format Validation - PASSED
-✅ Duitku API Connectivity - PASSED
-```
+# Supabase (Required)
+NEXT_PUBLIC_SUPABASE_URL=https://yourproject.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-### Build Test
-
-```bash
-npm run build
+# Application
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
 ```
-
-**Build Status**: ✅ **ZERO ERRORS**
 
 ---
 
 ## 🚀 Deployment
 
-### Production Build
-
-```bash
-npm run build
-npm run start
-```
-
-### Deploy to Vercel
-
+### Option 1: Vercel (Recommended)
 ```bash
 # Install Vercel CLI
-npm i -g vercel
+npm install -g vercel
 
 # Deploy
 vercel --prod
+
+# Set environment variables in Vercel Dashboard
 ```
 
-**Important**: Update callback and return URLs in `.env.local` to match your production domain.
+### Option 2: Cloudflare Pages
+```bash
+# Build project
+npm run build
 
----
-
-## 📖 API Routes
-
-### Payment APIs
-
-- `POST /api/duitku/checkout` - Create payment invoice
-- `POST /api/duitku/callback` - Receive payment notifications
-- `GET /api/duitku/check-status` - Check payment status
-
-### Analytics APIs
-
-- `GET /api/analytics/overview` - Dashboard overview
-- `GET /api/analytics/revenue` - Revenue metrics
-- `GET /api/analytics/traffic` - Traffic analytics
-
-### Team APIs
-
-- `GET /api/team/members` - Get team members
-- `GET /api/integrations/list` - List integrations
-
----
-
-## 🔒 Security
-
-- **Signature Verification**: All payment callbacks verified with MD5 signatures
-- **Row Level Security**: Supabase RLS policies on all tables
-- **HTTPS Only**: Production environment requires HTTPS
-- **Environment Variables**: Sensitive data stored securely
-- **CSRF Protection**: Built-in Next.js protection
-
----
-
-## 🎨 Project Structure
-
+# Deploy with Wrangler
+wrangler pages deploy .next
 ```
-webapp/
-├── app/                        # Next.js app directory
-│   ├── api/                   # API routes
-│   │   ├── duitku/           # Payment gateway APIs
-│   │   └── analytics/        # Analytics APIs
-│   ├── auth/                 # Authentication pages
-│   ├── dashboard/            # Dashboard pages
-│   ├── member/               # Member area
-│   ├── pricing/              # Pricing page
-│   └── legal/                # Legal pages
-├── components/               # React components
-├── lib/                      # Utilities and services
-│   ├── duitku.ts            # Duitku client
-│   ├── subscription-service.ts # Subscription logic
-│   └── supabase-client.ts   # Supabase client
-├── public/                   # Static assets
-└── styles/                   # Global styles
+
+### Option 3: Self-Hosted
+```bash
+# Build production bundle
+npm run build
+
+# Start server
+npm start
+
+# Or use PM2
+pm2 start npm --name "oasis-bi-pro" -- start
 ```
 
 ---
 
-## 🐛 Troubleshooting
+## 📡 Xendit Webhook Configuration
 
-### Payment Issues
+1. **Login to Xendit Dashboard**  
+   https://dashboard.xendit.co/
 
-If payments are not processing:
-1. Check Duitku credentials in `.env.local`
-2. Verify callback URL is publicly accessible
-3. Check signature generation in logs
-4. Review Supabase RLS policies
+2. **Navigate to Webhooks Settings**  
+   Settings → Developers → Webhooks
 
-### Database Issues
+3. **Add Webhook URL**
+   ```
+   https://your-domain.com/api/xendit/callback
+   ```
 
-If database updates fail:
-1. Verify Supabase credentials
-2. Check RLS policies
-3. Run APPLY_TO_SUPABASE.sql
-4. Check console logs for errors
+4. **Copy X-Callback-Token**  
+   Copy the generated token and add to `XENDIT_WEBHOOK_TOKEN` environment variable
 
-For more troubleshooting, see [DUITKU_INTEGRATION_COMPLETE.md](./DUITKU_INTEGRATION_COMPLETE.md).
+5. **Test Webhook**  
+   Use Xendit's webhook testing tool to verify integration
 
 ---
 
-## 📊 Status
+## 🗂️ Project Structure
 
-| Component | Status |
-|-----------|--------|
-| Build | ✅ Passing (0 errors) |
-| Tests | ✅ All tests passing |
-| Duitku Integration | ✅ Complete |
-| Supabase Integration | ✅ Complete |
-| Documentation | ✅ Complete |
-| Production Ready | ✅ Yes |
+```
+oasis-bi-pro-xendit.1/
+├── app/                        # Next.js App Router
+│   ├── api/                    # API Routes
+│   │   ├── xendit/
+│   │   │   ├── checkout/       # Payment creation endpoint
+│   │   │   └── callback/       # Webhook handler
+│   │   ├── analytics/
+│   │   └── team/
+│   ├── auth/                   # Authentication pages
+│   ├── dashboard/              # Main dashboard
+│   ├── member/                 # Member area
+│   ├── pricing/                # Pricing & plans
+│   └── checkout/               # Checkout flow
+├── lib/                        # Utility functions
+│   ├── xendit.ts               # Xendit API integration
+│   ├── supabase-client.ts      # Supabase client
+│   └── subscription-service.ts # Subscription logic
+├── public/                     # Static assets
+├── .env.example                # Environment template
+├── .env.local                  # Local configuration (gitignored)
+└── package.json                # Dependencies
+```
+
+---
+
+## 💰 Subscription Plans
+
+### Starter - Rp 99.000/bulan
+- 5 dashboard interaktif
+- 10 data source connections
+- Basic analytics & reporting
+- Email support (24 jam)
+- 1 user account
+
+### Professional - Rp 299.000/bulan ⭐ Popular
+- 50 dashboard interaktif
+- Unlimited data sources
+- Advanced AI analytics
+- Priority support (12 jam)
+- Custom branding
+- 5 user accounts
+- API access
+
+### Enterprise - Rp 999.000/bulan
+- Unlimited dashboards
+- Unlimited data sources
+- AI-powered insights
+- Dedicated support (24/7)
+- White-label solution
+- Unlimited users
+- Full API access
+- Custom integrations
+- SLA guarantee
+
+---
+
+## 🔄 Migration History
+
+### v2.1.0 - Xendit Migration (2025-12-05)
+✅ **Migrated from Faspay SNAP to Xendit**
+- Implemented Xendit Virtual Account & E-Wallet
+- Added X-Callback-Token webhook verification
+- Updated frontend checkout flow
+- Migrated database fields (faspay → xendit)
+- Build tested and passed ✅
+
+### v2.0.0 - Faspay SNAP Migration
+- Migrated from Duitku to Faspay SNAP
+- Implemented VA Dynamic & QRIS
+- Added signature verification
+
+### v1.0.0 - Initial Release
+- Duitku payment integration
+- Basic subscription management
+
+---
+
+## 🧪 Testing
+
+### Unit Tests
+```bash
+npm run test
+```
+
+### Build Test
+```bash
+npm run build
+```
+
+### E2E Test Payment Flow
+1. Go to `/pricing`
+2. Select a plan
+3. Fill customer information
+4. Choose payment method (VA or E-Wallet)
+5. Complete payment via Xendit
+6. Verify subscription activation in `/member/dashboard`
+
+---
+
+## 📚 Documentation
+
+### Xendit Resources
+- **API Docs**: https://docs.xendit.co/
+- **Dashboard**: https://dashboard.xendit.co/
+- **Webhooks**: https://docs.xendit.co/docs/handling-webhooks
+- **Support**: https://help.xendit.co/
+
+### Supabase Resources
+- **Docs**: https://supabase.com/docs
+- **Dashboard**: https://app.supabase.com/
+- **Auth Guide**: https://supabase.com/docs/guides/auth
+
+### Next.js Resources
+- **Docs**: https://nextjs.org/docs
+- **App Router**: https://nextjs.org/docs/app
+- **API Routes**: https://nextjs.org/docs/app/building-your-application/routing/route-handlers
 
 ---
 
 ## 🤝 Contributing
 
-This is a production project. For changes, please open an issue first.
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
 ---
 
 ## 📄 License
 
-Private project - All rights reserved.
-
----
-
-## 🙏 Acknowledgments
-
-- **Duitku** for payment gateway services
-- **Supabase** for backend infrastructure
-- **Vercel** for hosting platform
-- **shadcn/ui** for beautiful components
+This project is proprietary and confidential.  
+**© 2025 OASIS BI PRO. All rights reserved.**
 
 ---
 
 ## 📞 Support
 
-- **Email**: support@oasis-bi-pro.web.id
-- **Docs**: [DUITKU_INTEGRATION_COMPLETE.md](./DUITKU_INTEGRATION_COMPLETE.md)
-- **GitHub**: [Issues](https://github.com/Estes786/v0-v0oasisbiproduitkuv21mainmain-02-main-3-1-main-1-5-new/issues)
+- **Email**: support@oasis-bi-pro.com
+- **Documentation**: https://docs.oasis-bi-pro.com
+- **Issues**: https://github.com/Estes786/oasis-bi-pro-xendit.1/issues
 
 ---
 
-**Last Updated**: December 4, 2024  
-**Version**: 2.1.0  
-**Status**: 🎉 **PRODUCTION READY**
+## ✅ Production Checklist
+
+Before deploying to production:
+
+- [ ] Switch Xendit to production keys (`xnd_production_...`)
+- [ ] Update `XENDIT_ENV=production`
+- [ ] Configure production webhook URL in Xendit Dashboard
+- [ ] Update `NEXT_PUBLIC_APP_URL` to production domain
+- [ ] Verify Supabase production credentials
+- [ ] Test all payment flows (VA & E-Wallet)
+- [ ] Monitor webhook success rate
+- [ ] Set up error tracking (Sentry, LogRocket, etc.)
+- [ ] Configure analytics (Google Analytics, Mixpanel, etc.)
+- [ ] Enable SSL/HTTPS
+- [ ] Set up CDN for static assets
+- [ ] Configure backup strategy
+
+---
+
+**Built with ❤️ using Next.js, Supabase, and Xendit**
