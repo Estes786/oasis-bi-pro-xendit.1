@@ -36,7 +36,7 @@ function CheckoutContent() {
   const loadPaymentMethods = async () => {
     if (!plan) return;
     
-    // Faspay SNAP payment methods (hardcoded - no need to fetch)
+    // Xendit payment methods (hardcoded - no need to fetch)
     setPaymentMethods([
       {
         paymentMethod: 'va',
@@ -97,13 +97,14 @@ function CheckoutContent() {
 
     setLoading(true);
     try {
-      // Call Faspay SNAP checkout API
-      const response = await axios.post('/api/faspay/checkout', {
+      // Call Xendit checkout API
+      const response = await axios.post('/api/xendit/checkout', {
         planId: selectedPlan,
         email: formData.customerEmail,
         phoneNumber: formData.customerPhone,
         customerName: formData.customerName,
         paymentMethod: selectedPaymentMethod,
+        channelCode: selectedPaymentMethod === 'va' ? 'BCA_VIRTUAL_ACCOUNT' : 'GOPAY',
       });
 
       if (response.data.success) {
@@ -114,7 +115,7 @@ function CheckoutContent() {
           // Redirect to QR page or display QR code
           window.location.href = data.qrUrl;
         } else if (data.redirectUrl) {
-          // Redirect to Faspay payment page for VA
+          // Redirect to Xendit payment page (E-Wallet)
           window.location.href = data.redirectUrl;
         } else if (data.virtualAccountNo) {
           // Show VA number in success page

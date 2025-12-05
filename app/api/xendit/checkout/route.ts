@@ -1,41 +1,39 @@
 /**
- * FASPAY SNAP CHECKOUT API ROUTE
- * POST /api/faspay/checkout
+ * XENDIT CHECKOUT API ROUTE
+ * POST /api/xendit/checkout
  * 
- * Purpose: Create VA Dynamic payment request to Faspay for SUBSCRIPTION BILLING ONLY
+ * Purpose: Create payment request (VA or E-Wallet) for SUBSCRIPTION BILLING ONLY
  * This is NOT for processing third-party payments
  * We are collecting OUR subscription fees from OUR customers
- * 
- * SNAP: Standar Nasional Open API Pembayaran (Bank Indonesia)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { 
-  createFaspayVADynamic,
-  createFaspayQRIS,
-  generateMerchantOrderId,
+  createXenditVirtualAccount,
+  createXenditEWallet,
+  generateExternalId,
   SUBSCRIPTION_PLANS,
-  type FaspayPaymentRequest,
-  type FaspayQRISRequest
-} from '@/lib/faspay'
+  type XenditVARequest,
+  type XenditEWalletRequest
+} from '@/lib/xendit'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
     // Validate required fields
-    const { planId, email, phoneNumber, customerName, userId, paymentMethod = 'va' } = body
+    const { planId, email, phoneNumber, customerName, userId, paymentMethod = 'va', bankCode = 'BCA' } = body
     
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('🛒 FASPAY CHECKOUT REQUEST RECEIVED')
+    console.log('🛒 XENDIT CHECKOUT REQUEST RECEIVED')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('📦 Request data:', { planId, email, phoneNumber, customerName, userId })
+    console.log('📦 Request data:', { planId, email, phoneNumber, customerName, userId, paymentMethod, bankCode })
     
-    if (!planId || !email || !phoneNumber || !customerName) {
+    if (!planId || !phoneNumber || !customerName) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Missing required fields: planId, email, phoneNumber, customerName' 
+          error: 'Missing required fields: planId, phoneNumber, customerName' 
         },
         { status: 400 }
       )
@@ -55,45 +53,33 @@ export async function POST(request: NextRequest) {
     const plan = SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS]
     console.log('✅ Plan validated:', plan.name, '-', plan.price, 'IDR')
     
-    // Generate unique order ID
-    const merchantOrderId = generateMerchantOrderId(planId)
-    console.log('🔑 Generated Order ID:', merchantOrderId)
+    // Generate unique external ID
+    const externalId = generateExternalId(planId)
+    console.log('🔑 Generated External ID:', externalId)
     
-    // Create payment request
-    const paymentRequest: FaspayPaymentRequest = {
-      merchantOrderId,
-      paymentAmount: plan.price,
-      productDetails: `${plan.name} - OASIS BI PRO Subscription`,
-      email,
-      phoneNumber,
-      customerName,
-      planId: planId as keyof typeof SUBSCRIPTION_PLANS,
-      userId: userId || undefined,
-    }
-
-    console.log('📤 Calling Faspay SNAP API...')
+    console.log('📤 Calling Xendit API...')
     console.log('💳 Payment Method:', paymentMethod)
     
-    // Call Faspay SNAP API based on payment method
+    // Call Xendit API based on payment method
     let result: any
     
-    if (paymentMethod === 'qris' || paymentMethod === 'ewallet') {
-      // Create QRIS for E-Wallet payment
-      const qrisRequest: FaspayQRISRequest = {
-        merchantOrderId,
-        paymentAmount: plan.price,
-        productDetails: `${plan.name} - OASIS BI PRO Subscription`,
-        email,
-        phoneNumber,
-        customerName,
+    if (paymentMethod === 'ewallet') {
+      // Create E-Wallet charge
+      const ewalletType = body.ewalletType || 'OVO' // Default to OVO if not specified
+      
+      const ewalletRequest: XenditEWalletRequest = {
+        externalId,
+        amount: plan.price,
+        phone: phoneNumber,
+        ewalletType,
         planId: planId as keyof typeof SUBSCRIPTION_PLANS,
         userId: userId || undefined,
       }
       
-      result = await createFaspayQRIS(qrisRequest)
+      result = await createXenditEWallet(ewalletRequest)
       
       if (!result.success) {
-        console.error('❌ Faspay QRIS API call failed:', result.error)
+        console.error('❌ Xendit E-Wallet API call failed:', result.error)
         return NextResponse.json(
           { 
             success: false, 
@@ -103,16 +89,26 @@ export async function POST(request: NextRequest) {
         )
       }
       
-      console.log('✅ QR Code generated:', result.qrContent ? 'Yes' : 'No')
-      console.log('✅ QR URL:', result.qrUrl)
-      console.log('✅ Faspay Reference:', result.reference)
+      console.log('✅ E-Wallet Charge Created')
+      console.log('✅ Charge ID:', result.chargeId)
+      console.log('✅ Checkout URL:', result.checkoutUrl)
       
     } else {
-      // Default: Create VA Dynamic
-      result = await createFaspayVADynamic(paymentRequest)
+      // Default: Create Virtual Account
+      const vaRequest: XenditVARequest = {
+        externalId,
+        bankCode: bankCode.toUpperCase(),
+        name: customerName,
+        email,
+        expectedAmount: plan.price,
+        planId: planId as keyof typeof SUBSCRIPTION_PLANS,
+        userId: userId || undefined,
+      }
+      
+      result = await createXenditVirtualAccount(vaRequest)
       
       if (!result.success) {
-        console.error('❌ Faspay API call failed:', result.error)
+        console.error('❌ Xendit VA API call failed:', result.error)
         return NextResponse.json(
           { 
             success: false, 
@@ -122,9 +118,9 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      console.log('✅ VA Number generated:', result.virtualAccountNo)
-      console.log('✅ Redirect URL:', result.redirectUrl)
-      console.log('✅ Faspay Reference:', result.reference)
+      console.log('✅ VA Number generated:', result.vaNumber)
+      console.log('✅ Bank Code:', result.bankCode)
+      console.log('✅ Expected Amount:', result.expectedAmount)
     }
     
     // Create pending transaction in database (if userId provided)
@@ -148,7 +144,7 @@ export async function POST(request: NextRequest) {
         const { createPendingTransaction } = await import('@/lib/subscription-service')
         await createPendingTransaction({
           userId,
-          merchantOrderId,
+          merchantOrderId: externalId,
           amount: plan.price,
           planId
         })
@@ -166,25 +162,27 @@ export async function POST(request: NextRequest) {
     }
     
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('✅ FASPAY CHECKOUT COMPLETED SUCCESSFULLY')
+    console.log('✅ XENDIT CHECKOUT COMPLETED SUCCESSFULLY')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
     // Return payment info based on method
     const responseData: any = {
       paymentMethod,
-      reference: result.reference,
-      merchantOrderId,
+      reference: result.externalId || externalId,
+      externalId,
       amount: plan.price,
       planName: plan.name,
       expiryDate: result.expiryDate,
     }
     
-    if (paymentMethod === 'qris' || paymentMethod === 'ewallet') {
-      responseData.qrContent = result.qrContent
-      responseData.qrUrl = result.qrUrl
+    if (paymentMethod === 'ewallet') {
+      responseData.chargeId = result.chargeId
+      responseData.checkoutUrl = result.checkoutUrl
+      responseData.status = result.status
     } else {
-      responseData.virtualAccountNo = result.virtualAccountNo
-      responseData.redirectUrl = result.redirectUrl
+      responseData.vaNumber = result.vaNumber
+      responseData.bankCode = result.bankCode
+      responseData.expectedAmount = result.expectedAmount
     }
 
     return NextResponse.json({
@@ -221,4 +219,15 @@ export async function OPTIONS(request: NextRequest) {
       },
     }
   )
+}
+
+// GET endpoint for testing
+export async function GET(request: NextRequest) {
+  return NextResponse.json({
+    message: 'Xendit Checkout Endpoint',
+    status: 'Active',
+    timestamp: new Date().toISOString(),
+    note: 'This endpoint creates Xendit payment requests for subscription billing',
+    methods: ['Virtual Account (BCA, Mandiri, BNI, BRI, Permata)', 'E-Wallet (OVO, DANA, LinkAja)'],
+  })
 }

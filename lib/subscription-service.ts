@@ -10,7 +10,7 @@ export interface SubscriptionUpdateData {
   planId: string
   merchantOrderId: string
   amount: number
-  faspayReference: string
+  xenditReference: string
   status: 'active' | 'pending' | 'expired' | 'cancelled'
 }
 
@@ -59,7 +59,7 @@ export async function updateSubscriptionAfterPayment(data: SubscriptionUpdateDat
           current_period_start: periodStart.toISOString(),
           current_period_end: periodEnd.toISOString(),
           payment_gateway: 'faspay',
-          gateway_subscription_id: data.faspayReference,
+          gateway_subscription_id: data.xenditReference,
           updated_at: now.toISOString(),
         })
         .eq('id', existingSubscription.id)
@@ -81,7 +81,7 @@ export async function updateSubscriptionAfterPayment(data: SubscriptionUpdateDat
           current_period_start: periodStart.toISOString(),
           current_period_end: periodEnd.toISOString(),
           payment_gateway: 'faspay',
-          gateway_subscription_id: data.faspayReference,
+          gateway_subscription_id: data.xenditReference,
         })
       
       if (insertError) {
@@ -117,9 +117,9 @@ export async function updateSubscriptionAfterPayment(data: SubscriptionUpdateDat
         amount: data.amount,
         currency: 'IDR',
         status: data.status === 'active' ? 'completed' : data.status,
-        payment_method: 'faspay',
-        payment_gateway: 'faspay',
-        gateway_reference: data.faspayReference,
+        payment_method: 'xendit',
+        payment_gateway: 'xendit',
+        gateway_reference: data.xenditReference,
         metadata: {
           merchant_order_id: data.merchantOrderId,
           plan_id: data.planId,
@@ -165,8 +165,8 @@ export async function createPendingTransaction(data: {
         amount: data.amount,
         currency: 'IDR',
         status: 'pending',
-        payment_method: 'faspay',
-        payment_gateway: 'faspay',
+        payment_method: 'xendit',
+        payment_gateway: 'xendit',
         gateway_reference: data.merchantOrderId,
         metadata: {
           merchant_order_id: data.merchantOrderId,

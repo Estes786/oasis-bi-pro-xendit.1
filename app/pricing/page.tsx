@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Check, Zap, Users, Building2, Loader2 } from 'lucide-react'
 
-// Subscription plans matching lib/faspay.ts
+// Subscription plans matching lib/xendit.ts
 const PLANS = [
   {
     id: 'starter',
@@ -119,7 +119,7 @@ export default function PricingPage() {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 30000) // 30s timeout
       
-      const response = await fetch('/api/faspay/checkout', {
+      const response = await fetch('/api/xendit/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -129,6 +129,8 @@ export default function PricingPage() {
           email: customerInfo.email,
           phoneNumber: customerInfo.phone,
           customerName: customerInfo.name,
+          paymentMethod: 'va', // Default to Virtual Account
+          channelCode: 'BCA_VIRTUAL_ACCOUNT', // Default to BCA
         }),
         signal: controller.signal,
       })
@@ -150,13 +152,16 @@ export default function PricingPage() {
         throw new Error('Payment information not found in response')
       }
 
-      // Faspay can return redirectUrl or just VA number
+      // Xendit can return redirectUrl (E-Wallet) or VA number
       if (result.data.redirectUrl) {
         console.log('🔗 Redirecting to:', result.data.redirectUrl)
         window.location.href = result.data.redirectUrl
-      } else {
-        // If only VA number is returned, show it to user
-        alert(`VA Number: ${result.data.virtualAccountNo}\nSilakan transfer ke nomor VA ini untuk melanjutkan.`)
+      } else if (result.data.virtualAccountNo) {
+        // If VA number is returned, show it to user
+        alert(`VA Number: ${result.data.virtualAccountNo}\nSilakan transfer ke nomor VA ini untuk melanjutkan pembayaran.`)
+      } else if (result.data.qrContent) {
+        // If QR code is returned, could show QR modal (future enhancement)
+        alert(`QR Code tersedia. Silakan scan untuk melanjutkan pembayaran.`)
       }
 
     } catch (error) {
@@ -365,9 +370,9 @@ export default function PricingPage() {
 
               <div className="mt-6 p-4 bg-blue-50 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  🔒 Pembayaran aman melalui <strong>Faspay</strong>
+                  🔒 Pembayaran aman melalui <strong>Xendit</strong>
                   <br />
-                  💳 Mendukung: Virtual Account, Transfer Bank, E-Wallet, Kartu Kredit
+                  💳 Mendukung: Virtual Account (BCA, Mandiri, BNI, BRI), E-Wallet (GoPay, OVO, DANA), QRIS
                   <br />
                   ✅ 14-day money-back guarantee
                 </p>
@@ -388,9 +393,9 @@ export default function PricingPage() {
                 Bagaimana cara pembayaran?
               </h3>
               <p className="text-gray-700">
-                Kami menggunakan <strong>Faspay</strong> sebagai payment gateway. 
-                Anda bisa bayar via Virtual Account (Permata, Mandiri, BNI, BRI), 
-                Transfer Bank, E-Wallet, Kartu Kredit, atau Retail Payment.
+                Kami menggunakan <strong>Xendit</strong> sebagai payment gateway. 
+                Anda bisa bayar via Virtual Account (BCA, Mandiri, BNI, BRI), 
+                E-Wallet (GoPay, OVO, DANA, ShopeePay), atau QRIS.
               </p>
             </div>
 
