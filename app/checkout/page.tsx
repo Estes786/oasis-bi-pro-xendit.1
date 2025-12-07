@@ -97,6 +97,17 @@ function CheckoutContent() {
 
     setLoading(true);
     try {
+      console.log('🛒 Submitting payment request...');
+      console.log('📦 Payload:', {
+        planId: selectedPlan,
+        email: formData.customerEmail,
+        phoneNumber: formData.customerPhone,
+        customerName: formData.customerName,
+        paymentMethod: selectedPaymentMethod,
+        bankCode: selectedPaymentMethod === 'va' ? 'BCA' : undefined,
+        ewalletType: selectedPaymentMethod === 'qris' ? 'OVO' : undefined,
+      });
+
       // Call Xendit checkout API
       const response = await axios.post('/api/xendit/checkout', {
         planId: selectedPlan,
@@ -104,31 +115,63 @@ function CheckoutContent() {
         phoneNumber: formData.customerPhone,
         customerName: formData.customerName,
         paymentMethod: selectedPaymentMethod,
-        channelCode: selectedPaymentMethod === 'va' ? 'BCA_VIRTUAL_ACCOUNT' : 'GOPAY',
+        bankCode: selectedPaymentMethod === 'va' ? 'BCA' : undefined,
+        ewalletType: selectedPaymentMethod === 'qris' ? 'OVO' : undefined,
       });
 
+      console.log('📥 API Response:', response.data);
+
       if (response.data.success) {
-        const { data } = response.data;
+        const paymentData = response.data.data;
+        
+        console.log('✅ Payment created successfully');
+        console.log('📦 Payment data:', paymentData);
         
         // Handle based on payment method
-        if (selectedPaymentMethod === 'qris' && data.qrUrl) {
-          // Redirect to QR page or display QR code
-          window.location.href = data.qrUrl;
-        } else if (data.redirectUrl) {
-          // Redirect to Xendit payment page (E-Wallet)
-          window.location.href = data.redirectUrl;
-        } else if (data.virtualAccountNo) {
-          // Show VA number in success page
-          alert(`Virtual Account: ${data.virtualAccountNo}\nSilakan transfer sejumlah ${data.amount} IDR`);
+        if (selectedPaymentMethod === 'qris' || selectedPaymentMethod === 'ewallet') {
+          // E-Wallet: Redirect to checkout URL
+          if (paymentData.checkoutUrl) {
+            console.log('🔀 Redirecting to E-Wallet checkout:', paymentData.checkoutUrl);
+            window.location.href = paymentData.checkoutUrl;
+          } else {
+            console.error('❌ Missing checkoutUrl in response:', paymentData);
+            alert('Error: E-Wallet checkout URL tidak ditemukan. Silakan coba lagi.');
+          }
+        } else if (selectedPaymentMethod === 'va') {
+          // Virtual Account: Show VA details
+          if (paymentData.vaNumber) {
+            console.log('✅ VA Number received:', paymentData.vaNumber);
+            
+            // Store payment info in localStorage for success page
+            localStorage.setItem('pendingPayment', JSON.stringify({
+              vaNumber: paymentData.vaNumber,
+              bankCode: paymentData.bankCode,
+              amount: paymentData.amount,
+              planName: paymentData.planName,
+              expiryDate: paymentData.expiryDate,
+              reference: paymentData.reference,
+            }));
+            
+            // Redirect to pending payment page
+            router.push('/payment/pending');
+          } else {
+            console.error('❌ Missing vaNumber in response:', paymentData);
+            alert('Error: Virtual Account number tidak ditemukan. Silakan coba lagi.');
+          }
         } else {
-          alert('Pembayaran berhasil dibuat. Silakan cek email Anda untuk instruksi lebih lanjut.');
+          console.error('❌ Unknown payment method:', selectedPaymentMethod);
+          alert('Metode pembayaran tidak dikenali. Silakan coba lagi.');
         }
       } else {
-        alert('Gagal membuat pembayaran. Silakan coba lagi.');
+        console.error('❌ API returned error:', response.data);
+        alert('Gagal membuat pembayaran: ' + (response.data.error || 'Unknown error'));
       }
-    } catch (error) {
-      console.error('Payment creation failed:', error);
-      alert('Terjadi kesalahan. Silakan coba lagi.');
+    } catch (error: any) {
+      console.error('💥 Payment creation failed:', error);
+      console.error('Error details:', error.response?.data);
+      
+      const errorMessage = error.response?.data?.error || error.message || 'Terjadi kesalahan tidak dikenal';
+      alert('Terjadi kesalahan: ' + errorMessage);
     } finally {
       setLoading(false);
     }

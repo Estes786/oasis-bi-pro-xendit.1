@@ -161,10 +161,6 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('✅ XENDIT CHECKOUT COMPLETED SUCCESSFULLY')
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-
     // Return payment info based on method
     const responseData: any = {
       paymentMethod,
@@ -184,6 +180,13 @@ export async function POST(request: NextRequest) {
       responseData.bankCode = result.bankCode
       responseData.expectedAmount = result.expectedAmount
     }
+
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('✅ XENDIT CHECKOUT COMPLETED SUCCESSFULLY')
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('📦 RESPONSE DATA BEING SENT TO FRONTEND:')
+    console.log(JSON.stringify(responseData, null, 2))
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
     return NextResponse.json({
       success: true,

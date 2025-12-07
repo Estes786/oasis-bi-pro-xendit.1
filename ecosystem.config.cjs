@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'oasis-bi-pro',
-      script: 'npm',
-      args: 'run dev',
+      script: 'npx',
+      args: 'next dev --hostname 0.0.0.0 --port 3000',
       env: {
         NODE_ENV: 'development',
         PORT: 3000
