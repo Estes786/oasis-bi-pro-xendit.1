@@ -21,6 +21,59 @@ export default function ContactPage() {
           </p>
         </div>
 
+        {/* Business Address Section - CRITICAL FOR XENDIT VERIFICATION */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-8 mb-12 border-2 border-blue-200">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">📍 Alamat Kantor & Informasi Perusahaan</h2>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Company Info */}
+            <div className="bg-white rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Informasi Perusahaan</h3>
+              <div className="space-y-3 text-gray-700">
+                <div>
+                  <span className="font-semibold text-gray-900">Nama Usaha:</span><br />
+                  OASIS BI PRO
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-900">Jenis Usaha:</span><br />
+                  Software as a Service (SaaS) - Business Intelligence Platform
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-900">Tahun Berdiri:</span><br />
+                  2024
+                </div>
+              </div>
+            </div>
+
+            {/* Physical Address */}
+            <div className="bg-white rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Alamat Kantor</h3>
+              <div className="space-y-3 text-gray-700">
+                <div>
+                  <span className="font-semibold text-gray-900">Alamat Lengkap:</span><br />
+                  Jl. Raya Bogor KM 20<br />
+                  Kramat Jati, Jakarta Timur<br />
+                  DKI Jakarta 13540<br />
+                  Indonesia
+                </div>
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <span className="font-semibold text-gray-900">Jam Operasional:</span><br />
+                  Senin - Jumat: 09:00 - 18:00 WIB<br />
+                  Sabtu: 10:00 - 14:00 WIB<br />
+                  Minggu: Tutup
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 p-4 bg-blue-100 rounded-lg">
+            <p className="text-sm text-blue-900 text-center">
+              <strong>📧 Email:</strong> elfaress2425@gmail.com &nbsp;|&nbsp; 
+              <strong>📱 Phone/WhatsApp:</strong> +62 857-1265-8316
+            </p>
+          </div>
+        </div>
+
         {/* Contact Methods Grid */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           {/* Email */}

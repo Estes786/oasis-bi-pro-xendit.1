@@ -189,19 +189,115 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* Company Information Section - CRITICAL FOR XENDIT VERIFICATION */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">Informasi Perusahaan</h2>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Company Details */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8 border-2 border-blue-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Detail Perusahaan</h3>
+              <div className="space-y-4 text-gray-700">
+                <div>
+                  <span className="font-semibold text-gray-900">Nama Usaha:</span><br />
+                  OASIS BI PRO
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-900">Jenis Usaha:</span><br />
+                  Software as a Service (SaaS)<br />
+                  Business Intelligence Platform
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-900">Bidang:</span><br />
+                  Data Analytics & Business Intelligence
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-900">Tahun Berdiri:</span><br />
+                  2024
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-900">Layanan:</span><br />
+                  Analytics Software Subscription
+                </div>
+              </div>
+            </div>
+
+            {/* Contact & Address */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-8 border-2 border-green-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">📍 Alamat & Kontak</h3>
+              <div className="space-y-4 text-gray-700">
+                <div>
+                  <span className="font-semibold text-gray-900">Alamat Kantor:</span><br />
+                  Jl. Raya Bogor KM 20<br />
+                  Kramat Jati, Jakarta Timur<br />
+                  DKI Jakarta 13540<br />
+                  Indonesia
+                </div>
+                <div className="pt-4 border-t border-green-200">
+                  <span className="font-semibold text-gray-900">Email:</span><br />
+                  elfaress2425@gmail.com
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-900">Telepon/WhatsApp:</span><br />
+                  +62 857-1265-8316
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-900">Jam Operasional:</span><br />
+                  Senin - Jumat: 09:00 - 18:00 WIB<br />
+                  Sabtu: 10:00 - 14:00 WIB<br />
+                  Minggu: Tutup
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Business Model Clarity */}
+          <div className="mt-12 max-w-4xl mx-auto bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-8 border-2 border-blue-200">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">Model Bisnis Kami</h3>
+            <p className="text-gray-700 text-center mb-4">
+              <strong className="text-blue-600">OASIS BI PRO adalah Pure Business Intelligence SaaS Platform.</strong>
+            </p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-lg p-4">
+                <h4 className="font-semibold text-green-900 mb-2">✅ Kami Menyediakan:</h4>
+                <ul className="text-sm text-gray-700 space-y-1">
+                  <li>• Analytics Software (Dashboard, Reports, Insights)</li>
+                  <li>• Subscription-based access ke platform</li>
+                  <li>• Data visualization & AI-powered analytics</li>
+                  <li>• Customer membayar KAMI untuk software</li>
+                </ul>
+              </div>
+              <div className="bg-white rounded-lg p-4">
+                <h4 className="font-semibold text-red-900 mb-2">❌ Kami BUKAN:</h4>
+                <ul className="text-sm text-gray-700 space-y-1">
+                  <li>• Payment Processor/Gateway</li>
+                  <li>• Payment Facilitator (PayFac)</li>
+                  <li>• Marketplace atau Multi-vendor platform</li>
+                  <li>• Tidak memproses transaksi user</li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 text-center mt-4">
+              💳 Kami menggunakan <strong>Xendit</strong> HANYA untuk menerima pembayaran subscription dari customer kami sendiri.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Payment Integration Section */}
-      <section className="py-16">
+      <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-2xl p-12 text-white">
             <div className="text-center">
-              <h2 className="text-3xl font-bold mb-6">Duitku Payment Integration</h2>
+              <h2 className="text-3xl font-bold mb-6">Xendit Payment Integration</h2>
               <p className="text-xl mb-8 text-primary-100 max-w-3xl mx-auto">
-                OASIS BI PRO terintegrasi dengan Duitku Payment Gateway untuk memberikan kemudahan pembayaran 
+                OASIS BI PRO terintegrasi dengan Xendit Payment Gateway untuk memberikan kemudahan pembayaran subscription 
                 dengan berbagai metode yang aman dan terpercaya.
               </p>
               <div className="grid md:grid-cols-3 gap-6 text-center">
                 <div>
-                  <div className="text-3xl font-bold mb-2">15+</div>
+                  <div className="text-3xl font-bold mb-2">10+</div>
                   <div className="text-primary-100">Payment Methods</div>
                 </div>
                 <div>
@@ -215,10 +311,10 @@ export default function AboutPage() {
               </div>
               <div className="mt-8">
                 <Link 
-                  href="/payment-methods"
+                  href="/pricing"
                   className="inline-flex items-center gap-2 bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-primary-50 transition-colors"
                 >
-                  Lihat Metode Pembayaran
+                  Lihat Paket & Harga
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>

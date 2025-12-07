@@ -60,11 +60,16 @@ export default function RootLayout({
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-4">Kontak</h4>
+                <h4 className="font-semibold mb-4">Kontak & Alamat</h4>
                 <ul className="space-y-2 text-gray-400 text-sm">
                   <li>📧 elfaress2425@gmail.com</li>
                   <li>📱 +62 857-1265-8316</li>
-                  <li><a href="/legal/contact" className="hover:text-white transition">Hubungi Kami</a></li>
+                  <li className="pt-2">📍 <strong>Alamat Kantor:</strong><br />
+                    Jl. Raya Bogor KM 20<br />
+                    Kramat Jati, Jakarta Timur<br />
+                    DKI Jakarta 13540, Indonesia
+                  </li>
+                  <li className="pt-2"><a href="/legal/contact" className="hover:text-white transition underline">→ Hubungi Kami</a></li>
                 </ul>
               </div>
             </div>
