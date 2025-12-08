@@ -45,7 +45,7 @@ function CheckoutContent() {
         totalFee: 0,
       },
       {
-        paymentMethod: 'qris',
+        paymentMethod: 'ewallet',
         paymentName: 'QRIS / E-Wallet',
         paymentImage: '/payment-icons/qris.png',
         totalFee: 0,
@@ -105,7 +105,7 @@ function CheckoutContent() {
         customerName: formData.customerName,
         paymentMethod: selectedPaymentMethod,
         bankCode: selectedPaymentMethod === 'va' ? 'BCA' : undefined,
-        ewalletType: selectedPaymentMethod === 'qris' ? 'OVO' : undefined,
+        ewalletType: selectedPaymentMethod === 'ewallet' ? 'OVO' : undefined,
       });
 
       // Call Xendit checkout API
@@ -116,7 +116,7 @@ function CheckoutContent() {
         customerName: formData.customerName,
         paymentMethod: selectedPaymentMethod,
         bankCode: selectedPaymentMethod === 'va' ? 'BCA' : undefined,
-        ewalletType: selectedPaymentMethod === 'qris' ? 'OVO' : undefined,
+        ewalletType: selectedPaymentMethod === 'ewallet' ? 'OVO' : undefined,
       });
 
       console.log('📥 API Response:', response.data);
@@ -128,7 +128,7 @@ function CheckoutContent() {
         console.log('📦 Payment data:', paymentData);
         
         // Handle based on payment method
-        if (selectedPaymentMethod === 'qris' || selectedPaymentMethod === 'ewallet') {
+        if (selectedPaymentMethod === 'ewallet') {
           // E-Wallet: Redirect to checkout URL
           if (paymentData.checkoutUrl) {
             console.log('🔀 Redirecting to E-Wallet checkout:', paymentData.checkoutUrl);

@@ -1,19 +1,16 @@
 module.exports = {
   apps: [
     {
-      name: 'oasis-webapp',
+      name: 'oasis-bi-pro',
       script: 'npm',
-      args: 'start',
+      args: 'run dev',
       env: {
-        NODE_ENV: 'production',
+        NODE_ENV: 'development',
         PORT: 3000
       },
       watch: false,
       instances: 1,
-      exec_mode: 'fork',
-      error_file: './logs/error.log',
-      out_file: './logs/out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z'
+      exec_mode: 'fork'
     }
   ]
 }
