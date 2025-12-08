@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'oasis-bi-pro',
+      name: 'oasis-bi-xendit',
       script: 'npm',
       args: 'run dev',
       env: {
@@ -10,7 +10,8 @@ module.exports = {
       },
       watch: false,
       instances: 1,
-      exec_mode: 'fork'
+      exec_mode: 'fork',
+      max_memory_restart: '500M'
     }
   ]
 }
