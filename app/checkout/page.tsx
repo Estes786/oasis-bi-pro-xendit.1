@@ -355,56 +355,44 @@ function CheckoutContent() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {/* Group payment methods by type */}
-                  {['Virtual Account', 'E-Wallet', 'Credit Card', 'QRIS'].map((group) => {
-                    const methods = paymentMethods.filter((method) => {
-                      if (group === 'Virtual Account') return method.paymentMethod.includes('V');
-                      if (group === 'E-Wallet') return ['OV', 'DA', 'SP', 'LF'].includes(method.paymentMethod);
-                      if (group === 'Credit Card') return method.paymentMethod === 'CC';
-                      if (group === 'QRIS') return method.paymentMethod === 'NQ';
-                      return false;
-                    });
-
-                    if (methods.length === 0) return null;
-
-                    return (
-                      <div key={group}>
-                        <h3 className="font-semibold text-lg mb-3 flex items-center">
-                          {group === 'Virtual Account' && <Building2 className="w-5 h-5 mr-2" />}
-                          {group === 'E-Wallet' && <Wallet className="w-5 h-5 mr-2" />}
-                          {group === 'Credit Card' && <CreditCard className="w-5 h-5 mr-2" />}
-                          {group === 'QRIS' && <QrCode className="w-5 h-5 mr-2" />}
-                          {group}
-                        </h3>
-                        <div className="grid md:grid-cols-2 gap-4">
-                          {methods.map((method) => (
-                            <div
-                              key={method.paymentMethod}
-                              onClick={() => setSelectedPaymentMethod(method.paymentMethod)}
-                              className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                                selectedPaymentMethod === method.paymentMethod
-                                  ? 'border-primary-600 bg-primary-50'
-                                  : 'border-gray-200 hover:border-primary-300'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-semibold">{method.paymentName}</p>
-                                  <p className="text-sm text-gray-600">
-                                    {method.paymentFee > 0 && `Biaya: Rp ${method.paymentFee.toLocaleString('id-ID')}`}
-                                    {method.paymentFee === 0 && 'Gratis'}
-                                  </p>
-                                </div>
-                                {selectedPaymentMethod === method.paymentMethod && (
-                                  <Check className="w-6 h-6 text-primary-600" />
-                                )}
-                              </div>
+                  {/* Display payment methods directly without complex grouping - FIXED V10 */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {paymentMethods.map((method) => (
+                      <div
+                        key={method.paymentMethod}
+                        onClick={() => setSelectedPaymentMethod(method.paymentMethod)}
+                        className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
+                          selectedPaymentMethod === method.paymentMethod
+                            ? 'border-primary-600 bg-primary-50'
+                            : 'border-gray-200 hover:border-primary-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            {method.paymentMethod === 'va' && <Building2 className="w-6 h-6 mr-3 text-primary-600" />}
+                            {method.paymentMethod === 'ewallet' && <Wallet className="w-6 h-6 mr-3 text-primary-600" />}
+                            <div>
+                              <p className="font-semibold text-lg">{method.paymentName}</p>
+                              <p className="text-sm text-gray-500">
+                                {method.paymentMethod === 'va' && 'Transfer via Virtual Account'}
+                                {method.paymentMethod === 'ewallet' && 'Bayar dengan QRIS/E-Wallet'}
+                              </p>
                             </div>
-                          ))}
+                          </div>
+                          {selectedPaymentMethod === method.paymentMethod && (
+                            <Check className="w-6 h-6 text-primary-600 flex-shrink-0" />
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {method.totalFee > 0 ? (
+                            <span>Biaya: Rp {method.totalFee.toLocaleString('id-ID')}</span>
+                          ) : (
+                            <span className="text-green-600 font-medium">✓ Gratis biaya admin</span>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
               )}
 

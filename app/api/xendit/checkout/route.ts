@@ -22,12 +22,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // Validate required fields
-    const { planId, email, phoneNumber, customerName, userId, paymentMethod = 'va', bankCode = 'BCA' } = body
+    const { planId, email, phoneNumber, customerName, userId, paymentMethod = 'va', bankCode = 'BCA', ewalletType } = body
     
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('🛒 XENDIT CHECKOUT REQUEST RECEIVED')
+    console.log('🛒 XENDIT CHECKOUT REQUEST RECEIVED - V10 DEBUG')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('📦 Request data:', { planId, email, phoneNumber, customerName, userId, paymentMethod, bankCode })
+    console.log('📦 Full Request Body:', JSON.stringify(body, null, 2))
+    console.log('📦 Parsed Data:', { planId, email, phoneNumber, customerName, userId, paymentMethod, bankCode, ewalletType })
     
     if (!planId || !phoneNumber || !customerName) {
       return NextResponse.json(
