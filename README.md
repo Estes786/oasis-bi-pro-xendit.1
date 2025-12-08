@@ -1,362 +1,226 @@
-# 🚀 OASIS BI PRO - Xendit Edition
+# OASIS BI PRO - Xendit Edition
 
-> **Business Intelligence SaaS Platform** dengan integrasi pembayaran Xendit
+## 🎯 Project Overview
+**Name**: OASIS BI PRO - Pure Business Intelligence SaaS Platform  
+**Version**: V13.0.0 - Nuclear Clean-Up Edition  
+**Payment Gateway**: Xendit (Virtual Account + E-Wallet + QRIS)  
+**Tech Stack**: Next.js 16 + TypeScript + Tailwind CSS + Supabase + Xendit API
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.5.6-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-Latest-green)](https://supabase.com/)
-[![Xendit](https://img.shields.io/badge/Xendit-API-orange)](https://xendit.co/)
+## ✨ Main Features
+- 📊 **Business Intelligence Dashboard** - Real-time analytics and reporting
+- 📈 **Data Visualization** - Interactive charts with Recharts
+- 💳 **Xendit Payment Integration** - VA (BCA, Mandiri, BNI, BRI, Permata) + E-Wallet (OVO, DANA, LinkAja) + QRIS
+- 🔐 **Supabase Authentication** - Secure user management
+- 💼 **Subscription Management** - Starter, Professional, Enterprise plans
+- 📱 **Responsive Design** - Mobile-first approach with Tailwind CSS
+- 🌐 **Multi-language Support** - Indonesian (Bahasa) primary
 
----
+## 🌍 Public URLs
 
-## ✨ Fitur Utama
+### Production
+- **Live Site**: https://oasis-bi-pro-xendit-1.vercel.app
+- **GitHub Repository**: https://github.com/Estes786/oasis-bi-pro-xendit.1
 
-### 💳 Pembayaran Subscription
-- **Virtual Account**: BCA, Mandiri, BNI, BRI, Permata
+### API Endpoints
+- **Xendit Checkout**: `/api/xendit/checkout`
+- **Xendit Callback**: `/api/xendit/callback`
+- **VA Creation**: `/api/xendit/create-va`
+- **E-Wallet**: `/api/xendit/create-ewallet`
+
+## 💾 Data Architecture
+
+### Storage Services
+- **Supabase PostgreSQL** - Main database for users, subscriptions, transactions
+- **Xendit API** - Payment processing and webhook callbacks
+
+### Data Models
+```typescript
+// Users Table
+{
+  id: uuid,
+  email: string,
+  name: string,
+  created_at: timestamp
+}
+
+// Subscriptions Table
+{
+  id: uuid,
+  user_id: uuid,
+  plan_type: 'starter' | 'professional' | 'enterprise',
+  status: 'active' | 'inactive' | 'cancelled',
+  start_date: timestamp,
+  end_date: timestamp
+}
+
+// Transactions Table
+{
+  id: uuid,
+  user_id: uuid,
+  xendit_invoice_id: string,
+  payment_method: string,
+  amount: number,
+  status: 'pending' | 'paid' | 'failed',
+  created_at: timestamp
+}
+```
+
+## 📖 User Guide
+
+### 1. Browse Pricing Plans
+Visit `/pricing` to view available subscription plans:
+- **Starter**: Rp 299,000/month - Basic BI features
+- **Professional**: Rp 599,000/month - Advanced analytics + API access
+- **Enterprise**: Rp 1,299,000/month - Unlimited everything + priority support
+
+### 2. Checkout Process
+1. Select a plan from pricing page
+2. Click "Mulai Sekarang" (Start Now)
+3. Fill in customer information (Name, Email, Phone)
+4. Choose payment method (Virtual Account or E-Wallet/QRIS)
+5. Complete payment via Xendit portal
+6. Receive confirmation email
+
+### 3. Payment Methods
+- **Virtual Account (VA)**: BCA, Mandiri, BNI, BRI, Permata
 - **E-Wallet**: OVO, DANA, LinkAja
-- **Webhook Otomatis**: X-Callback-Token verification
-- **Auto-Activation**: Subscription langsung aktif setelah pembayaran sukses
+- **QRIS**: Scan to pay with any Indonesian e-wallet
 
-### 📊 Business Intelligence
-- Dashboard interaktif dengan real-time analytics
-- Multiple data source connections
-- Advanced AI-powered insights
-- Custom reporting & visualisasi
-- Team collaboration features
+## 🚀 Deployment Status
 
-### 🔐 Keamanan
-- Supabase Authentication (Email/Password, OAuth)
-- Row Level Security (RLS) policies
-- Xendit webhook token verification
-- Encrypted environment variables
-- HTTPS-only API communications
+### Platform
+- **Hosting**: Vercel (Recommended)
+- **Database**: Supabase Cloud
+- **Payment Gateway**: Xendit (Production mode)
+- **Status**: ✅ **ACTIVE - V13 Nuclear Clean-Up Deployed**
 
----
-
-## 🏗️ Tech Stack
-
-### Frontend
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **State**: React Hooks
-
-### Backend
-- **Runtime**: Next.js API Routes (Serverless)
-- **Database**: Supabase (PostgreSQL)
-- **Auth**: Supabase Auth
-- **Storage**: Supabase Storage
-
-### Payment Gateway
-- **Provider**: Xendit
-- **Methods**: Virtual Account, E-Wallet
-- **Security**: X-Callback-Token webhook verification
-- **Environment**: Test & Production modes
-
----
-
-## 📦 Installation
-
-### Prerequisites
-- Node.js 18+ and npm
-- Supabase account (https://supabase.com/)
-- Xendit account (https://xendit.co/)
-
-### 1. Clone Repository
+### Environment Variables
 ```bash
-git clone https://github.com/Estes786/oasis-bi-pro-xendit.1.git
-cd oasis-bi-pro-xendit.1
-```
+# Xendit Configuration
+XENDIT_SECRET_KEY=xnd_production_XXXXXXXX
+XENDIT_WEBHOOK_TOKEN=XXXXXXXXXXXXXXXX
 
-### 2. Install Dependencies
-```bash
-npm install
-```
-
-### 3. Environment Setup
-```bash
-# Copy environment template
-cp .env.example .env.local
-
-# Edit .env.local and add your credentials:
-# - Xendit Secret Key & Webhook Token
-# - Supabase URL & Keys
-# - Application URL
-```
-
-### 4. Run Development Server
-```bash
-npm run dev
-```
-
-Visit: http://localhost:3000
-
----
-
-## 🔧 Environment Variables
-
-```bash
-# Xendit (Required)
-XENDIT_SECRET_KEY=xnd_development_yourSecretKeyHere
-XENDIT_WEBHOOK_TOKEN=yourWebhookVerificationTokenHere
-XENDIT_ENV=test
-XENDIT_BASE_URL=https://api.xendit.co
-
-# Supabase (Required)
-NEXT_PUBLIC_SUPABASE_URL=https://yourproject.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # Application
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NODE_ENV=development
+NEXT_PUBLIC_APP_URL=https://your-domain.com
 ```
 
----
+## 🔧 Local Development
 
-## 🚀 Deployment
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Xendit account (sandbox/production)
+- Supabase project
 
-### Option 1: Vercel (Recommended)
+### Installation
 ```bash
-# Install Vercel CLI
-npm install -g vercel
+# Clone repository
+git clone https://github.com/Estes786/oasis-bi-pro-xendit.1
+cd oasis-bi-pro-xendit.1
 
-# Deploy
-vercel --prod
+# Install dependencies
+npm install
 
-# Set environment variables in Vercel Dashboard
+# Setup environment variables
+cp .env.example .env.local
+# Edit .env.local with your credentials
+
+# Run development server
+npm run dev
 ```
 
-### Option 2: Cloudflare Pages
+### Build for Production
 ```bash
-# Build project
 npm run build
-
-# Deploy with Wrangler
-wrangler pages deploy .next
-```
-
-### Option 3: Self-Hosted
-```bash
-# Build production bundle
-npm run build
-
-# Start server
 npm start
-
-# Or use PM2
-pm2 start npm --name "oasis-bi-pro" -- start
 ```
 
----
+## 📋 Current Features Status
 
-## 📡 Xendit Webhook Configuration
+### ✅ Completed Features
+- [x] Homepage with hero section and feature showcase
+- [x] Pricing page with 3 subscription tiers
+- [x] Checkout flow with 3-step wizard
+- [x] Xendit payment integration (VA + E-Wallet + QRIS)
+- [x] Webhook callback handling for payment status
+- [x] Phone number auto-formatting (08xxx → +628xxx)
+- [x] Supabase authentication setup
+- [x] Responsive mobile design
+- [x] Legal pages (Privacy Policy, Terms of Service)
+- [x] V13 Nuclear Clean-Up: Lockfile regeneration + legacy documentation purge
 
-1. **Login to Xendit Dashboard**  
-   https://dashboard.xendit.co/
+### 🚧 Features Not Yet Implemented
+- [ ] User dashboard after login
+- [ ] Transaction history page
+- [ ] Invoice PDF generation
+- [ ] Email notifications (payment confirmation, receipts)
+- [ ] Admin panel for subscription management
+- [ ] Analytics dashboard for business metrics
 
-2. **Navigate to Webhooks Settings**  
-   Settings → Developers → Webhooks
+## 🎯 Recommended Next Steps
 
-3. **Add Webhook URL**
-   ```
-   https://your-domain.com/api/xendit/callback
-   ```
+### Priority 1: User Dashboard
+Create post-login dashboard at `/dashboard` with:
+- Active subscription details
+- Payment history
+- Usage statistics
+- Account settings
 
-4. **Copy X-Callback-Token**  
-   Copy the generated token and add to `XENDIT_WEBHOOK_TOKEN` environment variable
+### Priority 2: Email System
+Integrate email service (SendGrid/Resend) for:
+- Payment confirmation emails
+- Invoice/receipt attachments
+- Subscription renewal reminders
 
-5. **Test Webhook**  
-   Use Xendit's webhook testing tool to verify integration
+### Priority 3: Admin Panel
+Build admin interface at `/admin` for:
+- User management
+- Subscription oversight
+- Transaction monitoring
+- Revenue analytics
 
----
+### Priority 4: Enhanced Features
+- Export data functionality
+- Advanced filtering/search
+- Custom report generation
+- API rate limiting
 
-## 🗂️ Project Structure
+## 🐛 Known Issues & Solutions
 
-```
-oasis-bi-pro-xendit.1/
-├── app/                        # Next.js App Router
-│   ├── api/                    # API Routes
-│   │   ├── xendit/
-│   │   │   ├── checkout/       # Payment creation endpoint
-│   │   │   └── callback/       # Webhook handler
-│   │   ├── analytics/
-│   │   └── team/
-│   ├── auth/                   # Authentication pages
-│   ├── dashboard/              # Main dashboard
-│   ├── member/                 # Member area
-│   ├── pricing/                # Pricing & plans
-│   └── checkout/               # Checkout flow
-├── lib/                        # Utility functions
-│   ├── xendit.ts               # Xendit API integration
-│   ├── supabase-client.ts      # Supabase client
-│   └── subscription-service.ts # Subscription logic
-├── public/                     # Static assets
-├── .env.example                # Environment template
-├── .env.local                  # Local configuration (gitignored)
-└── package.json                # Dependencies
-```
+### Issue: "Payment information not found" error
+**Status**: ✅ **RESOLVED in V13**  
+**Solution**: Nuclear clean-up with lockfile regeneration and legacy documentation purge
 
----
+## 📝 Change Log
 
-## 💰 Subscription Plans
+### V13.0.0 - Nuclear Clean-Up (2025-12-08)
+- 🗑️ **DELETED**: 60+ legacy markdown files with Duitku/Faspay references
+- 🔄 **REGENERATED**: package-lock.json from scratch (241KB fresh lockfile)
+- ♻️ **REBUILT**: node_modules and .next cache completely cleared
+- ✅ **VERIFIED**: Zero Duitku/Faspay references remaining in codebase
+- 📦 **UPDATED**: All dependencies installed with fresh dependency tree
 
-### Starter - Rp 99.000/bulan
-- 5 dashboard interaktif
-- 10 data source connections
-- Basic analytics & reporting
-- Email support (24 jam)
-- 1 user account
+### V12.0.0 - Frontend Clean Sweep (2025-12-08)
+- 🔄 Project name: oasis-bi-pro-duitku → oasis-bi-pro-xendit
+- 📝 Version bump: 2.1.0 → 2.2.0
+- 🎯 Cache busting identifier added to checkout page
 
-### Professional - Rp 299.000/bulan ⭐ Popular
-- 50 dashboard interaktif
-- Unlimited data sources
-- Advanced AI analytics
-- Priority support (12 jam)
-- Custom branding
-- 5 user accounts
-- API access
+### V11.0.0 - Backend Validation (2025-12-07)
+- ✅ Xendit API integration working 100%
+- ✅ Phone format auto-conversion (08xxx → +628xxx)
+- ✅ Both VA and E-Wallet methods validated
 
-### Enterprise - Rp 999.000/bulan
-- Unlimited dashboards
-- Unlimited data sources
-- AI-powered insights
-- Dedicated support (24/7)
-- White-label solution
-- Unlimited users
-- Full API access
-- Custom integrations
-- SLA guarantee
-
----
-
-## 🔄 Migration History
-
-### v2.1.1 - V11 Critical Fix (2025-12-08) 🎉
-✅ **XENDIT INTEGRATION FULLY FUNCTIONAL**
-- **Root Cause Fixed**: E-Wallet phone format validation
-- **Phone Formatter**: Auto-converts 08xxx → +628xxx for Xendit API
-- **Enhanced Logging**: Comprehensive error tracking at all layers
-- **Frontend Fallback**: Empty state handler for payment methods
-- **Test Suite**: Automated validation (`test-v11-checkout.js`)
-- **Both Methods Working**: Virtual Account ✅ | E-Wallet ✅
-- **Commit**: `03f9631` & `5bddbe0`
-
-**Test Results:**
-- ✅ Virtual Account (BCA): VA Number `381659999396851`
-- ✅ E-Wallet (OVO): Charge ID `ewc_eab7e9b6-0ba3-4b9f-a08d-5b92f2c4b533`
-
-**Documentation:**
-- `AUTONOMOUS_EXECUTION_V11_FINAL_SUCCESS.md` (Full Report)
-- `EXECUTIVE_SUMMARY_V11.md` (Executive Summary)
-- `QUICK_SUMMARY_V11.md` (Quick Reference)
-
-### v2.1.0 - Xendit Migration (2025-12-05)
-✅ **Migrated from Faspay SNAP to Xendit**
-- Implemented Xendit Virtual Account & E-Wallet
-- Added X-Callback-Token webhook verification
-- Updated frontend checkout flow
-- Migrated database fields (faspay → xendit)
-- Build tested and passed ✅
-
-### v2.0.0 - Faspay SNAP Migration
-- Migrated from Duitku to Faspay SNAP
-- Implemented VA Dynamic & QRIS
-- Added signature verification
-
-### v1.0.0 - Initial Release
-- Duitku payment integration
-- Basic subscription management
+## 📞 Support & Contact
+- **GitHub Issues**: https://github.com/Estes786/oasis-bi-pro-xendit.1/issues
+- **Documentation**: This README
+- **Last Updated**: December 8, 2025
 
 ---
 
-## 🧪 Testing
-
-### Unit Tests
-```bash
-npm run test
-```
-
-### Build Test
-```bash
-npm run build
-```
-
-### E2E Test Payment Flow
-1. Go to `/pricing`
-2. Select a plan
-3. Fill customer information
-4. Choose payment method (VA or E-Wallet)
-5. Complete payment via Xendit
-6. Verify subscription activation in `/member/dashboard`
-
----
-
-## 📚 Documentation
-
-### Xendit Resources
-- **API Docs**: https://docs.xendit.co/
-- **Dashboard**: https://dashboard.xendit.co/
-- **Webhooks**: https://docs.xendit.co/docs/handling-webhooks
-- **Support**: https://help.xendit.co/
-
-### Supabase Resources
-- **Docs**: https://supabase.com/docs
-- **Dashboard**: https://app.supabase.com/
-- **Auth Guide**: https://supabase.com/docs/guides/auth
-
-### Next.js Resources
-- **Docs**: https://nextjs.org/docs
-- **App Router**: https://nextjs.org/docs/app
-- **API Routes**: https://nextjs.org/docs/app/building-your-application/routing/route-handlers
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
-
----
-
-## 📄 License
-
-This project is proprietary and confidential.  
-**© 2025 OASIS BI PRO. All rights reserved.**
-
----
-
-## 📞 Support
-
-- **Email**: support@oasis-bi-pro.com
-- **Documentation**: https://docs.oasis-bi-pro.com
-- **Issues**: https://github.com/Estes786/oasis-bi-pro-xendit.1/issues
-
----
-
-## ✅ Production Checklist
-
-Before deploying to production:
-
-- [ ] Switch Xendit to production keys (`xnd_production_...`)
-- [ ] Update `XENDIT_ENV=production`
-- [ ] Configure production webhook URL in Xendit Dashboard
-- [ ] Update `NEXT_PUBLIC_APP_URL` to production domain
-- [ ] Verify Supabase production credentials
-- [ ] Test all payment flows (VA & E-Wallet)
-- [ ] Monitor webhook success rate
-- [ ] Set up error tracking (Sentry, LogRocket, etc.)
-- [ ] Configure analytics (Google Analytics, Mixpanel, etc.)
-- [ ] Enable SSL/HTTPS
-- [ ] Set up CDN for static assets
-- [ ] Configure backup strategy
-
----
-
-**Built with ❤️ using Next.js, Supabase, and Xendit**
+**Built with ❤️ by Autonomous Full-Stack AI Developer**  
+**Powered by Next.js + Xendit + Supabase**

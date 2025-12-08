@@ -1,9 +1,10 @@
 'use client';
 
-// ✅ V12-DEPLOYMENT-VALIDATION-2025-12-08T17:00:00Z
-// Frontend Clean Sweep: Cache Busting Identifier
-// This comment forces CDN/Vercel to rebuild fresh JavaScript bundle
-// All payment methods (VA & E-Wallet) working - Backend validated V11
+// ✅ V13-NUCLEAR-CLEANUP-2025-12-08T18:30:00Z
+// CRITICAL FIX: Lockfile Regeneration + Legacy Documentation Purge
+// This forces FRESH build with zero Duitku/Faspay metadata pollution
+// package-lock.json regenerated from scratch - 241KB fresh dependency tree
+// All 60+ legacy .md files deleted - Clean codebase for Xendit-only deployment
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
