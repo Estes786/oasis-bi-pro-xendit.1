@@ -1,0 +1,10 @@
+{
+  "external_id": "OASIS-STARTER-1765184910855-GY7DRX",
+  "callback_virtual_account_id": "test123456",
+  "account_number": "381659999094460",
+  "bank_code": "BCA",
+  "amount": "99000",
+  "expected_amount": "99000",
+  "status": "PAID",
+  "payment_id": "test-payment-123"
+}

@@ -210,16 +210,19 @@ export async function createXenditEWallet(data: XenditEWalletRequest) {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log('📦 Request Data:', data)
     
+    // Get base URL from environment or use localhost for development
+    const baseAppUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    
     const requestBody = {
       reference_id: data.externalId,
       currency: 'IDR',
       amount: data.amount,
       checkout_method: 'ONE_TIME_PAYMENT',
-      channel_code: data.ewalletType,
+      channel_code: 'ID_OVO', // Use proper Xendit channel codes
       channel_properties: {
         mobile_number: data.phone,
-        success_redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success`,
-        failure_redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/failed`,
+        success_redirect_url: `${baseAppUrl}/payment/success`,
+        failure_redirect_url: `${baseAppUrl}/payment/failed`,
       },
     }
     
