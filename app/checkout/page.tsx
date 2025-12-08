@@ -1,5 +1,10 @@
 'use client';
 
+// ✅ V12-DEPLOYMENT-VALIDATION-2025-12-08T17:00:00Z
+// Frontend Clean Sweep: Cache Busting Identifier
+// This comment forces CDN/Vercel to rebuild fresh JavaScript bundle
+// All payment methods (VA & E-Wallet) working - Backend validated V11
+
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Check, ArrowLeft, ArrowRight, CreditCard, Building2, Wallet, QrCode } from 'lucide-react';
