@@ -34,23 +34,60 @@ function CheckoutContent() {
   }, [currentStep]);
 
   const loadPaymentMethods = async () => {
-    if (!plan) return;
+    if (!plan) {
+      console.error('❌ V11 DEBUG: Plan is null/undefined in loadPaymentMethods');
+      return;
+    }
     
-    // Xendit payment methods (hardcoded - no need to fetch)
-    setPaymentMethods([
-      {
-        paymentMethod: 'va',
-        paymentName: 'Virtual Account',
-        paymentImage: '/payment-icons/va.png',
-        totalFee: 0,
-      },
-      {
-        paymentMethod: 'ewallet',
-        paymentName: 'QRIS / E-Wallet',
-        paymentImage: '/payment-icons/qris.png',
-        totalFee: 0,
-      }
-    ]);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔄 V11 DEBUG: Loading Payment Methods');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📦 Plan:', plan);
+    console.log('📦 Current paymentMethods state:', paymentMethods);
+    
+    try {
+      // Xendit payment methods (hardcoded - no need to fetch)
+      const methods = [
+        {
+          paymentMethod: 'va',
+          paymentName: 'Virtual Account',
+          paymentImage: '/payment-icons/va.png',
+          totalFee: 0,
+          paymentFee: 0,
+        },
+        {
+          paymentMethod: 'ewallet',
+          paymentName: 'QRIS / E-Wallet',
+          paymentImage: '/payment-icons/qris.png',
+          totalFee: 0,
+          paymentFee: 0,
+        }
+      ];
+      
+      console.log('✅ V11 DEBUG: Payment methods prepared:', methods);
+      setPaymentMethods(methods);
+      console.log('✅ V11 DEBUG: Payment methods state updated');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    } catch (error) {
+      console.error('💥 V11 DEBUG: Error in loadPaymentMethods:', error);
+      // Fallback: Set methods anyway
+      setPaymentMethods([
+        {
+          paymentMethod: 'va',
+          paymentName: 'Virtual Account',
+          paymentImage: '/payment-icons/va.png',
+          totalFee: 0,
+          paymentFee: 0,
+        },
+        {
+          paymentMethod: 'ewallet',
+          paymentName: 'QRIS / E-Wallet',
+          paymentImage: '/payment-icons/qris.png',
+          totalFee: 0,
+          paymentFee: 0,
+        }
+      ]);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -352,6 +389,19 @@ function CheckoutContent() {
                 <div className="text-center py-12">
                   <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
                   <p className="mt-4 text-gray-600">Memuat metode pembayaran...</p>
+                </div>
+              ) : paymentMethods.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6">
+                    <p className="text-lg font-semibold text-yellow-800 mb-2">⚠️ V11 DEBUG MODE ACTIVE</p>
+                    <p className="text-yellow-700 mb-4">Payment methods array is empty. This should never happen.</p>
+                    <button
+                      onClick={loadPaymentMethods}
+                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+                    >
+                      Retry Loading Payment Methods
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-6">

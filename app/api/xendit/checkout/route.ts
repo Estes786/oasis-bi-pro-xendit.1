@@ -196,14 +196,20 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error('💥 CHECKOUT ERROR')
+    console.error('💥 CHECKOUT ERROR - V11 ENHANCED LOGGING')
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error(error)
+    console.error('🐞 Error Type:', error instanceof Error ? error.constructor.name : typeof error)
+    console.error('🐞 Error Message:', error instanceof Error ? error.message : String(error))
+    console.error('🐞 Error Stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('📦 Full Error Object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error' 
+        error: error instanceof Error ? error.message : 'Internal server error',
+        errorType: error instanceof Error ? error.constructor.name : typeof error,
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     )

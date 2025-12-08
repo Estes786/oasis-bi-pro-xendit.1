@@ -173,13 +173,21 @@ export async function createXenditVirtualAccount(data: XenditVARequest) {
     
   } catch (error) {
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error('💥 XENDIT VA CREATION ERROR')
+    console.error('💥 XENDIT VA CREATION ERROR - V11 ENHANCED')
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error(error)
+    console.error('🐞 Error Type:', error instanceof Error ? error.constructor.name : typeof error)
+    console.error('🐞 Error Message:', error instanceof Error ? error.message : String(error))
+    console.error('🐞 Error Stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('📦 Xendit Config Status:')
+    console.error('   Secret Key:', XENDIT_CONFIG.secretKey ? `✅ Set (${XENDIT_CONFIG.secretKey.substring(0, 20)}...)` : '❌ Missing')
+    console.error('   Base URL:', XENDIT_CONFIG.baseUrl)
+    console.error('   Environment:', XENDIT_CONFIG.environment)
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
     }
   }
 }
@@ -213,6 +221,13 @@ export async function createXenditEWallet(data: XenditEWalletRequest) {
     // Get base URL from environment or use localhost for development
     const baseAppUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     
+    // Format phone number: Xendit requires +62 country code
+    const formattedPhone = data.phone.startsWith('+62') 
+      ? data.phone 
+      : data.phone.startsWith('0') 
+        ? '+62' + data.phone.substring(1)
+        : '+62' + data.phone;
+    
     const requestBody = {
       reference_id: data.externalId,
       currency: 'IDR',
@@ -220,11 +235,13 @@ export async function createXenditEWallet(data: XenditEWalletRequest) {
       checkout_method: 'ONE_TIME_PAYMENT',
       channel_code: 'ID_OVO', // Use proper Xendit channel codes
       channel_properties: {
-        mobile_number: data.phone,
+        mobile_number: formattedPhone,
         success_redirect_url: `${baseAppUrl}/payment/success`,
         failure_redirect_url: `${baseAppUrl}/payment/failed`,
       },
     }
+    
+    console.log('📱 Formatted Phone Number:', formattedPhone)
     
     console.log('📤 Xendit E-Wallet Request Body:', requestBody)
     
@@ -270,13 +287,21 @@ export async function createXenditEWallet(data: XenditEWalletRequest) {
     
   } catch (error) {
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error('💥 XENDIT E-WALLET CREATION ERROR')
+    console.error('💥 XENDIT E-WALLET CREATION ERROR - V11 ENHANCED')
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error(error)
+    console.error('🐞 Error Type:', error instanceof Error ? error.constructor.name : typeof error)
+    console.error('🐞 Error Message:', error instanceof Error ? error.message : String(error))
+    console.error('🐞 Error Stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('📦 Xendit Config Status:')
+    console.error('   Secret Key:', XENDIT_CONFIG.secretKey ? `✅ Set (${XENDIT_CONFIG.secretKey.substring(0, 20)}...)` : '❌ Missing')
+    console.error('   Base URL:', XENDIT_CONFIG.baseUrl)
+    console.error('   Environment:', XENDIT_CONFIG.environment)
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
     }
   }
 }
