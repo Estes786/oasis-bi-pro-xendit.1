@@ -1,3 +1,9 @@
+// V19: Environment Conflict Resolution
+// Removed explicit NODE_ENV to prevent Next.js override warnings
+// Next.js will automatically set NODE_ENV based on the command:
+// - 'npm run dev' → development
+// - 'npm run build' + 'npm start' → production
+
 module.exports = {
   apps: [
     {
@@ -5,7 +11,7 @@ module.exports = {
       script: 'npm',
       args: 'run dev',
       env: {
-        NODE_ENV: 'development',
+        // V19: NO explicit NODE_ENV here - let Next.js decide
         PORT: 3000
       },
       watch: false,
