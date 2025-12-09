@@ -9,13 +9,66 @@
  * Xendit API Authentication: Basic Auth with Secret Key as username
  */
 
-// Xendit Configuration
-export const XENDIT_CONFIG = {
-  secretKey: process.env.XENDIT_SECRET_KEY || '',
-  webhookToken: process.env.XENDIT_WEBHOOK_TOKEN || '',
-  environment: process.env.XENDIT_ENV || 'test',
-  baseUrl: process.env.XENDIT_BASE_URL || 'https://api.xendit.co',
+// ✅ V16 ENVIRONMENT KEY SAFETY LOCK
+// Validate and load Xendit credentials with safety checks
+function loadXenditConfig() {
+  const secretKey = process.env.XENDIT_SECRET_KEY || ''
+  const webhookToken = process.env.XENDIT_WEBHOOK_TOKEN || ''
+  const environment = process.env.XENDIT_ENV || 'test'
+  const nodeEnv = process.env.NODE_ENV || 'development'
+  const baseUrl = process.env.XENDIT_BASE_URL || 'https://api.xendit.co'
+  
+  // V16 CRITICAL: Validate key type matches environment
+  if (secretKey) {
+    const isSandboxKey = secretKey.startsWith('xnd_development_')
+    const isProductionKey = secretKey.startsWith('xnd_production_')
+    
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('🔐 V16 XENDIT KEY VALIDATION')
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('📦 NODE_ENV:', nodeEnv)
+    console.log('📦 XENDIT_ENV:', environment)
+    console.log('🔑 Secret Key Type:', isSandboxKey ? '✅ SANDBOX (xnd_development_)' : isProductionKey ? '⚠️ PRODUCTION (xnd_production_)' : '❌ INVALID FORMAT')
+    
+    // V16 SAFETY: Warn if using production key in non-production environment
+    if (isProductionKey && nodeEnv !== 'production') {
+      console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.warn('⚠️⚠️⚠️ WARNING: PRODUCTION KEY IN NON-PRODUCTION ENVIRONMENT ⚠️⚠️⚠️')
+      console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.warn('   Current NODE_ENV:', nodeEnv)
+      console.warn('   Secret Key Type: PRODUCTION')
+      console.warn('   ACTION REQUIRED: Use sandbox key (xnd_development_) for testing')
+      console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    }
+    
+    // V16 ENFORCEMENT: Block production key in development
+    if (isProductionKey && (nodeEnv === 'development' || environment === 'test')) {
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('🚫 CRITICAL: PRODUCTION KEY BLOCKED IN DEVELOPMENT MODE')
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('   Using production Xendit keys in development is DANGEROUS!')
+      console.error('   This could lead to REAL charges on REAL customer accounts.')
+      console.error('   ')
+      console.error('   Please set XENDIT_SECRET_KEY to a sandbox key:')
+      console.error('   XENDIT_SECRET_KEY=xnd_development_YOUR_SANDBOX_KEY')
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      throw new Error('PRODUCTION KEY NOT ALLOWED IN DEVELOPMENT - Use sandbox key (xnd_development_)')
+    }
+    
+    console.log('✅ V16 KEY VALIDATION: PASSED')
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  }
+  
+  return {
+    secretKey,
+    webhookToken,
+    environment,
+    baseUrl,
+  }
 }
+
+// Xendit Configuration with V16 Safety Lock
+export const XENDIT_CONFIG = loadXenditConfig()
 
 // Subscription Plans (matching pricing page)
 export const SUBSCRIPTION_PLANS = {

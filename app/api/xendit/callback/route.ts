@@ -25,13 +25,22 @@ import {
 export async function POST(request: NextRequest) {
   const startTime = Date.now()
   
+  // ✅ V16 COMPLIANCE: Log all incoming webhook attempts (without sensitive data)
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('📥 V16 WEBHOOK: Incoming Xendit Callback')
+  console.log('   Timestamp:', new Date().toISOString())
+  console.log('   Method:', request.method)
+  console.log('   URL:', request.url)
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  
   try {
     // STEP 1: VERIFY X-CALLBACK-TOKEN (CRITICAL SECURITY CHECK)
     const callbackToken = request.headers.get('X-Callback-Token') || request.headers.get('x-callback-token')
     
     if (!callbackToken) {
-      console.error('❌ MISSING X-CALLBACK-TOKEN HEADER')
-      console.error('Possible security breach attempt - webhook rejected')
+      console.error('❌ V16 SECURITY: MISSING X-CALLBACK-TOKEN HEADER')
+      console.error('   Possible security breach attempt - webhook rejected')
+      console.error('   Will return 401 Unauthorized')
       return NextResponse.json(
         { 
           success: false, 
@@ -44,8 +53,9 @@ export async function POST(request: NextRequest) {
     const isValidToken = verifyXenditWebhook(callbackToken)
     
     if (!isValidToken) {
-      console.error('❌ INVALID X-CALLBACK-TOKEN')
-      console.error('Possible fraud attempt - webhook rejected')
+      console.error('❌ V16 SECURITY: INVALID X-CALLBACK-TOKEN')
+      console.error('   Possible fraud attempt - webhook rejected')
+      console.error('   Will return 401 Unauthorized')
       return NextResponse.json(
         { 
           success: false, 
@@ -55,16 +65,22 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    console.log('✅ Webhook token verified successfully')
+    console.log('✅ V16 SECURITY: Webhook token verified successfully')
     
     // Parse callback data from Xendit
     const body = await request.json()
     
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('🔔 XENDIT CALLBACK RECEIVED')
+    console.log('🔔 V16 XENDIT CALLBACK RECEIVED')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('📦 Full Payload:', body)
+    console.log('📦 Full Payload (V16 Enhanced Logging):')
+    console.log(JSON.stringify(body, null, 2))
     console.log('   Timestamp:', new Date().toISOString())
+    console.log('   Headers:', {
+      'content-type': request.headers.get('content-type'),
+      'user-agent': request.headers.get('user-agent'),
+      'x-callback-token-present': !!callbackToken
+    })
 
     // STEP 2: DETERMINE CALLBACK TYPE
     // Virtual Account has: external_id, account_number, callback_virtual_account_id
@@ -110,14 +126,19 @@ export async function POST(request: NextRequest) {
       console.log('   Charge ID:', reference)
       
     } else {
-      console.error('❌ UNKNOWN CALLBACK TYPE')
-      console.error('Could not identify callback as VA or E-Wallet')
+      console.error('❌ V16: UNKNOWN CALLBACK TYPE')
+      console.error('   Could not identify callback as VA or E-Wallet')
+      console.error('   Payload structure:', Object.keys(body))
+      // ✅ V16 COMPLIANCE: Return 200 OK even for unknown types to avoid Xendit marking as failed
+      console.log('📤 V16 COMPLIANCE: Returning 200 OK for unknown callback type (logged for investigation)')
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Unknown callback type' 
+          error: 'Unknown callback type',
+          message: 'Logged for investigation',
+          payload_keys: Object.keys(body)
         },
-        { status: 400 }
+        { status: 200 }
       )
     }
 
@@ -132,13 +153,15 @@ export async function POST(request: NextRequest) {
     const userId = await getUserIdFromTransaction(externalId)
     
     if (!userId) {
-      console.error('❌ User ID not found for order:', externalId)
-      // Still return 200 to avoid Xendit retry loop
+      console.error('❌ V16: User ID not found for order:', externalId)
+      console.error('   This will be logged for manual processing')
+      // ✅ V16 COMPLIANCE: Still return 200 OK to avoid Xendit retry loop
+      console.log('📤 V16 COMPLIANCE: Returning 200 OK despite missing user ID')
       return NextResponse.json({
         success: false,
         error: 'User ID not found',
-        message: 'Will process manually'
-      })
+        message: 'Logged for manual processing'
+      }, { status: 200 })
     }
     
     console.log('👤 User ID:', userId)
@@ -196,11 +219,18 @@ export async function POST(request: NextRequest) {
 
     const processingTime = Date.now() - startTime
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('✅ CALLBACK PROCESSED SUCCESSFULLY')
+    console.log('✅ V16 CALLBACK PROCESSED SUCCESSFULLY')
     console.log(`⏱️  Processing time: ${processingTime}ms`)
+    console.log('   External ID:', externalId)
+    console.log('   Payment Status:', paymentStatus)
+    console.log('   Subscription Status:', subscriptionStatus)
+    console.log('   User ID:', userId)
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
-    // IMPORTANT: Always return 200 to Xendit
+    // ✅ V16 COMPLIANCE: STRICT 200 OK POLICY
+    // ALWAYS return 200 OK to Xendit, regardless of internal processing result
+    // This prevents Xendit from marking endpoint as failed and triggering rate limits
+    console.log('📤 V16 COMPLIANCE: Returning 200 OK to Xendit')
     return NextResponse.json({
       success: true,
       message: 'Webhook processed successfully',
@@ -208,23 +238,31 @@ export async function POST(request: NextRequest) {
       status: paymentStatus,
       subscription_status: subscriptionStatus,
       processing_time: `${processingTime}ms`
-    })
+    }, { status: 200 })
 
   } catch (error) {
     const processingTime = Date.now() - startTime
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error('💥 CALLBACK PROCESSING ERROR')
+    console.error('💥 V16 CALLBACK PROCESSING ERROR')
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error(error)
-    console.error(`⏱️  Failed after: ${processingTime}ms`)
+    console.error('   Error Type:', error instanceof Error ? error.constructor.name : typeof error)
+    console.error('   Error Message:', error instanceof Error ? error.message : String(error))
+    console.error('   Error Stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('   Processing Time:', `${processingTime}ms`)
+    console.error('   Full Error Object:', error)
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     
-    // IMPORTANT: Still return 200 to Xendit to avoid retry loops
+    // ✅ V16 COMPLIANCE: STRICT 200 OK POLICY - ALWAYS return 200 even on errors
+    // This is CRITICAL to prevent Xendit from marking endpoint as down and triggering rate limits
+    console.log('📤 V16 COMPLIANCE: Returning 200 OK despite error (logged for manual investigation)')
     return NextResponse.json(
       { 
         success: false, 
         error: error instanceof Error ? error.message : 'Internal error',
-        message: 'Error logged, will investigate manually',
-        processing_time: `${processingTime}ms`
+        error_type: error instanceof Error ? error.constructor.name : typeof error,
+        message: 'Error logged for manual investigation',
+        processing_time: `${processingTime}ms`,
+        timestamp: new Date().toISOString()
       },
       { status: 200 }
     )
