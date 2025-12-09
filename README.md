@@ -2,9 +2,64 @@
 
 ## 🎯 Project Overview
 **Name**: OASIS BI PRO - Pure Business Intelligence SaaS Platform  
-**Version**: V14.0.0 - Debug Panel Injection Edition  
+**Version**: V16.0.0 - Compliance & Environment Hardening Edition  
 **Payment Gateway**: Xendit (Virtual Account + E-Wallet + QRIS)  
 **Tech Stack**: Next.js 16 + TypeScript + Tailwind CSS + Supabase + Xendit API
+
+## 🚀 Latest Updates - V15 & V16
+
+### V15.0.0 - Network Isolation & State Audit ✅
+**Release Date**: December 9, 2025
+
+**Objective**: Eliminate network/auth blockade as root cause of 'Payment information not found' error
+
+**Phase 1: Proxy/Middleware Bypass Audit**
+- ✅ Added explicit Xendit API bypass in proxy.ts
+- ✅ Skip Supabase auth check for `/api/xendit/*` routes
+- ✅ Prevent auth middleware from blocking API calls
+
+**Phase 2: Client-Side State Management Audit**
+- ✅ Implemented aggressive state reset before fetch
+- ✅ Clear paymentMethods array to eliminate ghost errors
+- ✅ Added URL verification with `NEXT_PUBLIC_APP_URL`
+- ✅ Enhanced logging for URL debugging
+
+**Phase 3: API Enhancement**
+- ✅ Updated GET `/api/xendit/checkout` to return payment methods
+- ✅ Added comprehensive logging for debugging
+- ✅ Return structured `paymentMethods` array
+
+### V16.0.0 - Xendit Compliance & Environment Hardening ✅
+**Release Date**: December 9, 2025
+
+**Objective**: Eliminate environment/compliance issues as root cause of payment failures
+
+**Phase 1: Environment Key Safety Lock**
+- ✅ Added conditional key loading with NODE_ENV validation
+- ✅ Automatic sandbox/production key detection
+- ✅ Strict enforcement: Block production keys in development
+- ✅ Warning system for environment mismatches
+- ✅ Comprehensive logging for key validation
+
+**Phase 2: Webhook Response Compliance Hardening**
+- ✅ **STRICT 200 OK POLICY** - Always return 200 to Xendit
+- ✅ Enhanced logging for all webhook events
+- ✅ Detailed payload logging (without sensitive data)
+- ✅ Error cases now return 200 OK to prevent retry loops
+- ✅ Unknown callback types handled gracefully
+- ✅ Missing user ID cases logged but return 200 OK
+
+**Security Improvements**:
+- Production key blocked in development mode
+- Sandbox key enforced for non-production environments
+- Webhook token verification maintained
+- Comprehensive audit logging
+
+**Compliance Improvements**:
+- All webhook responses guaranteed 200 OK
+- Prevents Xendit endpoint failure marking
+- Avoids webhook retry loops
+- Manual investigation logging for edge cases
 
 ## ✨ Main Features
 - 📊 **Business Intelligence Dashboard** - Real-time analytics and reporting
@@ -17,15 +72,21 @@
 
 ## 🌍 Public URLs
 
+### Sandbox Development (V15/V16 Testing)
+- **Sandbox URL**: https://3000-ihmc9ou7skwtsi9ud26z0-d0b9e1e2.sandbox.novita.ai
+- **Checkout Page**: https://3000-ihmc9ou7skwtsi9ud26z0-d0b9e1e2.sandbox.novita.ai/checkout?plan=starter
+- **Status**: ✅ ONLINE with V15/V16 fixes
+- **Environment**: Development (Sandbox keys only)
+
 ### Production
 - **Live Site**: https://oasis-bi-pro-xendit-1.vercel.app
 - **GitHub Repository**: https://github.com/Estes786/oasis-bi-pro-xendit.1
+- **Status**: Pending redeployment with V15/V16 changes
 
 ### API Endpoints
-- **Xendit Checkout**: `/api/xendit/checkout`
-- **Xendit Callback**: `/api/xendit/callback`
-- **VA Creation**: `/api/xendit/create-va`
-- **E-Wallet**: `/api/xendit/create-ewallet`
+- **Xendit Checkout (GET)**: `/api/xendit/checkout` - Returns available payment methods
+- **Xendit Checkout (POST)**: `/api/xendit/checkout` - Create payment request
+- **Xendit Callback**: `/api/xendit/callback` - Webhook handler (200 OK policy)
 
 ## 💾 Data Architecture
 
