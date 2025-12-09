@@ -63,12 +63,23 @@ function CheckoutContent() {
     }
     
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔄 V14 DEBUG: Loading Payment Methods with API Call Tracking');
+    console.log('🔄 V15 DEBUG: Loading Payment Methods with Enhanced State Reset');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📦 Plan:', plan);
     console.log('📦 Current paymentMethods state:', paymentMethods);
     
-    // V14: Set loading state for debug panel
+    // V15 CRITICAL: Reset ALL states before fetch to eliminate ghost errors
+    console.log('🔄 V15 STATE RESET: Clearing payment methods and error states');
+    setPaymentMethods([]); // ✅ Reset to empty array
+    setDebugState({
+      loading: false,
+      error: null,
+      data: null,
+      rawResponse: null,
+      timestamp: null,
+    }); // ✅ Complete state reset
+    
+    // V15: Set loading state for debug panel (after reset)
     setLoadingMethods(true);
     setDebugState({
       loading: true,
@@ -79,21 +90,27 @@ function CheckoutContent() {
     });
     
     try {
-      console.log('🌐 V14 DEBUG: Attempting to fetch payment options from API...');
-      console.log('🔗 V14 DEBUG: API Endpoint: /api/xendit/checkout');
-      console.log('📤 V14 DEBUG: Request payload:', { planId: selectedPlan });
+      // V15 URL VERIFICATION: Log the actual URL being called
+      const apiUrl = process.env.NEXT_PUBLIC_APP_URL 
+        ? `${process.env.NEXT_PUBLIC_APP_URL}/api/xendit/checkout`
+        : '/api/xendit/checkout';
       
-      // V14 CRITICAL: Actually call the API to test network connectivity
-      const response = await axios.get('/api/xendit/checkout', {
+      console.log('🌐 V15 DEBUG: Attempting to fetch payment options from API...');
+      console.log('🔗 V15 DEBUG: Full API URL:', apiUrl);
+      console.log('🔗 V15 DEBUG: NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL || 'NOT SET (using relative path)');
+      console.log('📤 V15 DEBUG: Request payload:', { planId: selectedPlan });
+      
+      // V15 CRITICAL: Use full URL or relative path based on environment
+      const response = await axios.get(apiUrl, {
         params: { planId: selectedPlan },
         timeout: 10000, // 10 second timeout
       });
       
-      console.log('📥 V14 DEBUG: Raw API Response received:');
+      console.log('📥 V15 DEBUG: Raw API Response received:');
       console.log(response);
-      console.log('📦 V14 DEBUG: Response data:', response.data);
-      console.log('📊 V14 DEBUG: Response status:', response.status);
-      console.log('📋 V14 DEBUG: Response headers:', response.headers);
+      console.log('📦 V15 DEBUG: Response data:', response.data);
+      console.log('📊 V15 DEBUG: Response status:', response.status);
+      console.log('📋 V15 DEBUG: Response headers:', response.headers);
       
       // V14: Update debug state with successful response
       setDebugState({
@@ -111,10 +128,10 @@ function CheckoutContent() {
       
       // Check if API returned payment methods
       if (response.data && response.data.paymentMethods) {
-        console.log('✅ V14 DEBUG: Payment methods received from API:', response.data.paymentMethods);
+        console.log('✅ V15 DEBUG: Payment methods received from API:', response.data.paymentMethods);
         setPaymentMethods(response.data.paymentMethods);
       } else {
-        console.warn('⚠️ V14 DEBUG: API response does not contain paymentMethods, using fallback');
+        console.warn('⚠️ V15 DEBUG: API response does not contain paymentMethods, using fallback');
         // Fallback to hardcoded methods
         const fallbackMethods = [
           {

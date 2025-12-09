@@ -231,13 +231,42 @@ export async function OPTIONS(request: NextRequest) {
   )
 }
 
-// GET endpoint for testing
+// GET endpoint for fetching available payment methods
 export async function GET(request: NextRequest) {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('📥 V15 GET: Fetching available payment methods')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  
+  // Return available payment methods for the checkout page
+  const paymentMethods = [
+    {
+      paymentMethod: 'va',
+      paymentName: 'Virtual Account',
+      paymentImage: '/payment-icons/va.png',
+      totalFee: 0,
+      paymentFee: 0,
+      description: 'Transfer via Virtual Account Bank',
+    },
+    {
+      paymentMethod: 'ewallet',
+      paymentName: 'QRIS / E-Wallet',
+      paymentImage: '/payment-icons/qris.png',
+      totalFee: 0,
+      paymentFee: 0,
+      description: 'Bayar dengan QRIS atau E-Wallet',
+    }
+  ]
+  
+  console.log('✅ V15 GET: Returning payment methods:', paymentMethods)
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  
   return NextResponse.json({
-    message: 'Xendit Checkout Endpoint',
+    success: true,
+    message: 'Xendit Checkout Endpoint - Payment Methods Available',
     status: 'Active',
     timestamp: new Date().toISOString(),
-    note: 'This endpoint creates Xendit payment requests for subscription billing',
-    methods: ['Virtual Account (BCA, Mandiri, BNI, BRI, Permata)', 'E-Wallet (OVO, DANA, LinkAja)'],
+    paymentMethods,
+    note: 'This endpoint returns available payment methods and creates Xendit payment requests',
+    supportedMethods: ['Virtual Account (BCA, Mandiri, BNI, BRI, Permata)', 'E-Wallet (OVO, DANA, LinkAja)'],
   })
 }

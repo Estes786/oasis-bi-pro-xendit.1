@@ -2,6 +2,18 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
+  // ✅ V15 BYPASS: Skip auth check for Xendit API endpoints
+  const isXenditAPI = request.nextUrl.pathname.startsWith('/api/xendit/')
+  
+  if (isXenditAPI) {
+    console.log('🔓 V15 PROXY BYPASS: Xendit API route detected, skipping auth:', request.nextUrl.pathname)
+    return NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
+  }
+  
   let response = NextResponse.next({
     request: {
       headers: request.headers,
