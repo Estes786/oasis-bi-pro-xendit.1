@@ -1,16 +1,17 @@
 'use client';
 
-// ✅ V13-NUCLEAR-CLEANUP-2025-12-08T18:30:00Z
-// CRITICAL FIX: Lockfile Regeneration + Legacy Documentation Purge
-// This forces FRESH build with zero Duitku/Faspay metadata pollution
-// package-lock.json regenerated from scratch - 241KB fresh dependency tree
-// All 60+ legacy .md files deleted - Clean codebase for Xendit-only deployment
+// ✅ V14-DEBUG-INJECTION-2025-12-09
+// CRITICAL DEBUG FIX: DebugPanel Component Injection for API Response Tracing
+// Purpose: Inject permanent debug component to display RAW API response from /api/xendit/checkout
+// This will provide irrefutable evidence of Network/Environment vs Client-side Parsing failure
+// Added comprehensive error tracking and raw response logging
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Check, ArrowLeft, ArrowRight, CreditCard, Building2, Wallet, QrCode } from 'lucide-react';
 import { PRICING_PLANS, getPlanBySlug } from '@/lib/pricing';
 import axios from 'axios';
+import DebugPanel from '@/components/ui/DebugPanel';
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
@@ -23,6 +24,15 @@ function CheckoutContent() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingMethods, setLoadingMethods] = useState(false);
+  
+  // V14 DEBUG: State for tracking API calls and responses
+  const [debugState, setDebugState] = useState({
+    loading: false,
+    error: null as string | null,
+    data: null as any,
+    rawResponse: null as any,
+    timestamp: null as string | null,
+  });
   
   const [formData, setFormData] = useState({
     customerName: '',
@@ -41,19 +51,121 @@ function CheckoutContent() {
 
   const loadPaymentMethods = async () => {
     if (!plan) {
-      console.error('❌ V11 DEBUG: Plan is null/undefined in loadPaymentMethods');
+      console.error('❌ V14 DEBUG: Plan is null/undefined in loadPaymentMethods');
+      setDebugState({
+        loading: false,
+        error: 'Plan is null or undefined',
+        data: null,
+        rawResponse: null,
+        timestamp: new Date().toISOString(),
+      });
       return;
     }
     
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔄 V11 DEBUG: Loading Payment Methods');
+    console.log('🔄 V14 DEBUG: Loading Payment Methods with API Call Tracking');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📦 Plan:', plan);
     console.log('📦 Current paymentMethods state:', paymentMethods);
     
+    // V14: Set loading state for debug panel
+    setLoadingMethods(true);
+    setDebugState({
+      loading: true,
+      error: null,
+      data: null,
+      rawResponse: null,
+      timestamp: new Date().toISOString(),
+    });
+    
     try {
-      // Xendit payment methods (hardcoded - no need to fetch)
-      const methods = [
+      console.log('🌐 V14 DEBUG: Attempting to fetch payment options from API...');
+      console.log('🔗 V14 DEBUG: API Endpoint: /api/xendit/checkout');
+      console.log('📤 V14 DEBUG: Request payload:', { planId: selectedPlan });
+      
+      // V14 CRITICAL: Actually call the API to test network connectivity
+      const response = await axios.get('/api/xendit/checkout', {
+        params: { planId: selectedPlan },
+        timeout: 10000, // 10 second timeout
+      });
+      
+      console.log('📥 V14 DEBUG: Raw API Response received:');
+      console.log(response);
+      console.log('📦 V14 DEBUG: Response data:', response.data);
+      console.log('📊 V14 DEBUG: Response status:', response.status);
+      console.log('📋 V14 DEBUG: Response headers:', response.headers);
+      
+      // V14: Update debug state with successful response
+      setDebugState({
+        loading: false,
+        error: null,
+        data: response.data,
+        rawResponse: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+          data: response.data,
+        },
+        timestamp: new Date().toISOString(),
+      });
+      
+      // Check if API returned payment methods
+      if (response.data && response.data.paymentMethods) {
+        console.log('✅ V14 DEBUG: Payment methods received from API:', response.data.paymentMethods);
+        setPaymentMethods(response.data.paymentMethods);
+      } else {
+        console.warn('⚠️ V14 DEBUG: API response does not contain paymentMethods, using fallback');
+        // Fallback to hardcoded methods
+        const fallbackMethods = [
+          {
+            paymentMethod: 'va',
+            paymentName: 'Virtual Account',
+            paymentImage: '/payment-icons/va.png',
+            totalFee: 0,
+            paymentFee: 0,
+          },
+          {
+            paymentMethod: 'ewallet',
+            paymentName: 'QRIS / E-Wallet',
+            paymentImage: '/payment-icons/qris.png',
+            totalFee: 0,
+            paymentFee: 0,
+          }
+        ];
+        setPaymentMethods(fallbackMethods);
+      }
+      
+      console.log('✅ V14 DEBUG: Payment methods state updated successfully');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    } catch (error: any) {
+      console.error('💥 V14 DEBUG: Error in loadPaymentMethods:', error);
+      console.error('💥 V14 DEBUG: Error message:', error.message);
+      console.error('💥 V14 DEBUG: Error response:', error.response);
+      console.error('💥 V14 DEBUG: Error request:', error.request);
+      
+      // V14: Capture error details for debug panel
+      const errorMessage = error.response?.data?.error || error.message || 'Unknown network error';
+      const errorDetails = {
+        message: errorMessage,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        responseData: error.response?.data,
+        isNetworkError: !error.response,
+        isTimeout: error.code === 'ECONNABORTED',
+      };
+      
+      setDebugState({
+        loading: false,
+        error: `API Error: ${errorMessage} (Network: ${errorDetails.isNetworkError}, Timeout: ${errorDetails.isTimeout})`,
+        data: null,
+        rawResponse: errorDetails,
+        timestamp: new Date().toISOString(),
+      });
+      
+      console.error('💥 V14 DEBUG: Full error details:', errorDetails);
+      
+      // Fallback: Set methods anyway to allow user to continue
+      const fallbackMethods = [
         {
           paymentMethod: 'va',
           paymentName: 'Virtual Account',
@@ -69,30 +181,10 @@ function CheckoutContent() {
           paymentFee: 0,
         }
       ];
-      
-      console.log('✅ V11 DEBUG: Payment methods prepared:', methods);
-      setPaymentMethods(methods);
-      console.log('✅ V11 DEBUG: Payment methods state updated');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    } catch (error) {
-      console.error('💥 V11 DEBUG: Error in loadPaymentMethods:', error);
-      // Fallback: Set methods anyway
-      setPaymentMethods([
-        {
-          paymentMethod: 'va',
-          paymentName: 'Virtual Account',
-          paymentImage: '/payment-icons/va.png',
-          totalFee: 0,
-          paymentFee: 0,
-        },
-        {
-          paymentMethod: 'ewallet',
-          paymentName: 'QRIS / E-Wallet',
-          paymentImage: '/payment-icons/qris.png',
-          totalFee: 0,
-          paymentFee: 0,
-        }
-      ]);
+      setPaymentMethods(fallbackMethods);
+      console.log('⚠️ V14 DEBUG: Using fallback payment methods due to API error');
+    } finally {
+      setLoadingMethods(false);
     }
   };
 
@@ -391,6 +483,16 @@ function CheckoutContent() {
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Pilih Metode Pembayaran</h2>
               
+              {/* V14 DEBUG PANEL - Always visible */}
+              <DebugPanel
+                title="🔍 V14 Payment Methods API Debug Panel"
+                loading={debugState.loading}
+                error={debugState.error}
+                data={debugState.data}
+                rawResponse={debugState.rawResponse}
+                showRaw={true}
+              />
+              
               {loadingMethods ? (
                 <div className="text-center py-12">
                   <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
@@ -398,14 +500,14 @@ function CheckoutContent() {
                 </div>
               ) : paymentMethods.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6">
-                    <p className="text-lg font-semibold text-yellow-800 mb-2">⚠️ V11 DEBUG MODE ACTIVE</p>
-                    <p className="text-yellow-700 mb-4">Payment methods array is empty. This should never happen.</p>
+                  <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6">
+                    <p className="text-lg font-semibold text-red-800 mb-2">⚠️ V14 CRITICAL: Payment Methods Not Loaded</p>
+                    <p className="text-red-700 mb-4">Payment methods array is empty. Check Debug Panel above for details.</p>
                     <button
                       onClick={loadPaymentMethods}
-                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                     >
-                      Retry Loading Payment Methods
+                      🔄 Retry Loading Payment Methods
                     </button>
                   </div>
                 </div>
