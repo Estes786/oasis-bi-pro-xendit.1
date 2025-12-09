@@ -2,7 +2,7 @@
 
 ## 🎯 Project Overview
 **Name**: OASIS BI PRO - Pure Business Intelligence SaaS Platform  
-**Version**: V13.0.0 - Nuclear Clean-Up Edition  
+**Version**: V14.0.0 - Debug Panel Injection Edition  
 **Payment Gateway**: Xendit (Virtual Account + E-Wallet + QRIS)  
 **Tech Stack**: Next.js 16 + TypeScript + Tailwind CSS + Supabase + Xendit API
 
@@ -89,10 +89,11 @@ Visit `/pricing` to view available subscription plans:
 ## 🚀 Deployment Status
 
 ### Platform
-- **Hosting**: Vercel (Recommended)
+- **Hosting**: Vercel (Production) / Sandbox (Development)
 - **Database**: Supabase Cloud
-- **Payment Gateway**: Xendit (Production mode)
-- **Status**: ✅ **ACTIVE - V13 Nuclear Clean-Up Deployed**
+- **Payment Gateway**: Xendit (Development mode)
+- **Status**: ✅ **ACTIVE - V14 Debug Panel Injected**
+- **Sandbox URL**: https://3000-ihlcb25gqdd5dimvf95e0-b9b802c4.sandbox.novita.ai
 
 ### Environment Variables
 ```bash
@@ -153,6 +154,7 @@ npm start
 - [x] Responsive mobile design
 - [x] Legal pages (Privacy Policy, Terms of Service)
 - [x] V13 Nuclear Clean-Up: Lockfile regeneration + legacy documentation purge
+- [x] **V14 Debug Panel**: Real-time API response inspector with comprehensive error tracking
 
 ### 🚧 Features Not Yet Implemented
 - [ ] User dashboard after login
@@ -192,11 +194,40 @@ Build admin interface at `/admin` for:
 
 ## 🐛 Known Issues & Solutions
 
-### Issue: "Payment information not found" error
-**Status**: ✅ **RESOLVED in V13**  
-**Solution**: Nuclear clean-up with lockfile regeneration and legacy documentation purge
+### Issue: "Payment information not found" error (Ghost Error)
+**Status**: 🔍 **UNDER INVESTIGATION - V14 Debug Panel Active**  
+**Analysis Approach**:
+- **V14 Debug Panel** injected into `/checkout` page (Step 3)
+- Real-time display of API response from `/api/xendit/checkout`
+- Comprehensive error tracking: network errors, timeouts, response parsing
+- Visual indicators: Loading (blue), Success (green), Error (red)
+
+**Debug Panel Features**:
+- ✅ Raw JSON response display
+- ✅ Network status monitoring
+- ✅ Error message capture
+- ✅ Request/response timestamp tracking
+- ✅ Fallback payment methods on API failure
+
+**Next Steps for Diagnosis**:
+1. Visit `/checkout?plan=starter` on sandbox: https://3000-ihlcb25gqdd5dimvf95e0-b9b802c4.sandbox.novita.ai/checkout?plan=starter
+2. Navigate to Step 3 (Payment Method Selection)
+3. Observe Debug Panel output to determine:
+   - **(a)** API returns success but frontend doesn't display → Client-side parsing issue
+   - **(b)** Network/CORS/timeout error → Backend/Infrastructure issue
+   - **(c)** Payment methods display correctly → Problem resolved
 
 ## 📝 Change Log
+
+### V14.0.0 - Debug Panel Injection (2025-12-09)
+- 🔍 **CREATED**: `/components/ui/DebugPanel.tsx` - Comprehensive API response inspector
+- 🔧 **MODIFIED**: `/app/checkout/page.tsx` - Integrated debug panel with real-time tracking
+- 📊 **ENHANCED**: `loadPaymentMethods()` - Now fetches from `/api/xendit/checkout` with full error handling
+- 🎨 **UI FEATURES**: Color-coded status indicators, raw JSON display, network monitoring
+- 📝 **LOGGING**: Enhanced console.log with detailed request/response debugging
+- 🛡️ **FALLBACK**: Automatic fallback to hardcoded payment methods on API failure
+- 🚀 **DEPLOYED**: Sandbox environment at https://3000-ihlcb25gqdd5dimvf95e0-b9b802c4.sandbox.novita.ai
+- 📦 **PUSHED**: Git commit 45e62b2 to GitHub main branch
 
 ### V13.0.0 - Nuclear Clean-Up (2025-12-08)
 - 🗑️ **DELETED**: 60+ legacy markdown files with Duitku/Faspay references
