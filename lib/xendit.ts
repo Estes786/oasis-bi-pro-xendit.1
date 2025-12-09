@@ -9,8 +9,8 @@
  * Xendit API Authentication: Basic Auth with Secret Key as username
  */
 
-// ✅ V16 ENVIRONMENT KEY SAFETY LOCK
-// Validate and load Xendit credentials with safety checks
+// ✅ V18 ENVIRONMENT KEY SAFETY LOCK - ISOLATED CLIENT INITIALIZATION
+// Load Xendit configuration WITHOUT throwing errors at module level
 function loadXenditConfig() {
   const secretKey = process.env.XENDIT_SECRET_KEY || ''
   const webhookToken = process.env.XENDIT_WEBHOOK_TOKEN || ''
@@ -18,57 +18,109 @@ function loadXenditConfig() {
   const nodeEnv = process.env.NODE_ENV || 'development'
   const baseUrl = process.env.XENDIT_BASE_URL || 'https://api.xendit.co'
   
-  // V16 CRITICAL: Validate key type matches environment
-  if (secretKey) {
-    const isSandboxKey = secretKey.startsWith('xnd_development_')
-    const isProductionKey = secretKey.startsWith('xnd_production_')
-    
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('🔐 V16 XENDIT KEY VALIDATION')
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('📦 NODE_ENV:', nodeEnv)
-    console.log('📦 XENDIT_ENV:', environment)
-    console.log('🔑 Secret Key Type:', isSandboxKey ? '✅ SANDBOX (xnd_development_)' : isProductionKey ? '⚠️ PRODUCTION (xnd_production_)' : '❌ INVALID FORMAT')
-    
-    // V16 SAFETY: Warn if using production key in non-production environment
-    if (isProductionKey && nodeEnv !== 'production') {
-      console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-      console.warn('⚠️⚠️⚠️ WARNING: PRODUCTION KEY IN NON-PRODUCTION ENVIRONMENT ⚠️⚠️⚠️')
-      console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-      console.warn('   Current NODE_ENV:', nodeEnv)
-      console.warn('   Secret Key Type: PRODUCTION')
-      console.warn('   ACTION REQUIRED: Use sandbox key (xnd_development_) for testing')
-      console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    }
-    
-    // V16 ENFORCEMENT: Block production key in development
-    if (isProductionKey && (nodeEnv === 'development' || environment === 'test')) {
-      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-      console.error('🚫 CRITICAL: PRODUCTION KEY BLOCKED IN DEVELOPMENT MODE')
-      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-      console.error('   Using production Xendit keys in development is DANGEROUS!')
-      console.error('   This could lead to REAL charges on REAL customer accounts.')
-      console.error('   ')
-      console.error('   Please set XENDIT_SECRET_KEY to a sandbox key:')
-      console.error('   XENDIT_SECRET_KEY=xnd_development_YOUR_SANDBOX_KEY')
-      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-      throw new Error('PRODUCTION KEY NOT ALLOWED IN DEVELOPMENT - Use sandbox key (xnd_development_)')
-    }
-    
-    console.log('✅ V16 KEY VALIDATION: PASSED')
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  }
-  
   return {
     secretKey,
     webhookToken,
     environment,
+    nodeEnv,
     baseUrl,
   }
 }
 
-// Xendit Configuration with V16 Safety Lock
+// Xendit Configuration (lightweight, no validation at module level)
 export const XENDIT_CONFIG = loadXenditConfig()
+
+/**
+ * ✅ V18 CRITICAL: XENDIT CLIENT FACTORY FUNCTION
+ * Explicit validation BEFORE client initialization
+ * This function MUST be called explicitly in request handlers
+ * This allows V17's try/catch to properly capture errors
+ */
+export function getXenditClient() {
+  const { secretKey, nodeEnv, environment } = XENDIT_CONFIG
+  
+  // V18 PHASE 2: FATAL ERROR if key is missing or empty
+  if (!secretKey || secretKey.trim() === '') {
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('🚨 FATAL V18: XENDIT_SECRET_KEY MISSING!')
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('   XENDIT_SECRET_KEY is not set in environment variables!')
+    console.error('   ')
+    console.error('   📋 REQUIRED ACTION:')
+    console.error('   1. Check your .env file exists')
+    console.error('   2. Verify XENDIT_SECRET_KEY is set correctly:')
+    console.error('      XENDIT_SECRET_KEY=xnd_development_YOUR_KEY_HERE')
+    console.error('   3. Restart your application after adding the key')
+    console.error('   ')
+    console.error('   🔍 Current Environment:')
+    console.error('      NODE_ENV:', nodeEnv)
+    console.error('      XENDIT_ENV:', environment)
+    console.error('      Secret Key:', secretKey ? `[SET BUT EMPTY]` : '[NOT SET]')
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    
+    throw new Error('FATAL V18: XENDIT_SECRET_KEY missing or empty. Check .env file!')
+  }
+  
+  // V18: Validate key format and environment matching
+  const isSandboxKey = secretKey.startsWith('xnd_development_')
+  const isProductionKey = secretKey.startsWith('xnd_production_')
+  
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('🔐 V18 XENDIT CLIENT INITIALIZATION')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('📦 NODE_ENV:', nodeEnv)
+  console.log('📦 XENDIT_ENV:', environment)
+  console.log('🔑 Secret Key Type:', isSandboxKey ? '✅ SANDBOX (xnd_development_)' : isProductionKey ? '⚠️ PRODUCTION (xnd_production_)' : '❌ INVALID FORMAT')
+  
+  // V18: Validate key format
+  if (!isSandboxKey && !isProductionKey) {
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('🚨 FATAL V18: INVALID XENDIT KEY FORMAT!')
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('   The XENDIT_SECRET_KEY does not match expected format.')
+    console.error('   ')
+    console.error('   Expected formats:')
+    console.error('   - Sandbox: xnd_development_XXXXX...')
+    console.error('   - Production: xnd_production_XXXXX...')
+    console.error('   ')
+    console.error('   Current key starts with:', secretKey.substring(0, 20) + '...')
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    
+    throw new Error('FATAL V18: XENDIT_SECRET_KEY has invalid format. Must start with xnd_development_ or xnd_production_')
+  }
+  
+  // V18 SAFETY: Warn if using production key in non-production environment
+  if (isProductionKey && nodeEnv !== 'production') {
+    console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.warn('⚠️⚠️⚠️ WARNING: PRODUCTION KEY IN NON-PRODUCTION ENVIRONMENT ⚠️⚠️⚠️')
+    console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.warn('   Current NODE_ENV:', nodeEnv)
+    console.warn('   Secret Key Type: PRODUCTION')
+    console.warn('   ACTION REQUIRED: Use sandbox key (xnd_development_) for testing')
+    console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  }
+  
+  // V18 ENFORCEMENT: Block production key in development
+  if (isProductionKey && (nodeEnv === 'development' || environment === 'test')) {
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('🚫 FATAL V18: PRODUCTION KEY BLOCKED IN DEVELOPMENT MODE')
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('   Using production Xendit keys in development is DANGEROUS!')
+    console.error('   This could lead to REAL charges on REAL customer accounts.')
+    console.error('   ')
+    console.error('   Please set XENDIT_SECRET_KEY to a sandbox key:')
+    console.error('   XENDIT_SECRET_KEY=xnd_development_YOUR_SANDBOX_KEY')
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    throw new Error('FATAL V18: PRODUCTION KEY NOT ALLOWED IN DEVELOPMENT - Use sandbox key (xnd_development_)')
+  }
+  
+  console.log('✅ V18 CLIENT VALIDATION: PASSED')
+  console.log('   Secret Key Preview:', secretKey.substring(0, 25) + '...')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  
+  // Return validated config (not a client object, just config)
+  return XENDIT_CONFIG
+}
 
 // Subscription Plans (matching pricing page)
 export const SUBSCRIPTION_PLANS = {
@@ -159,15 +211,23 @@ export interface XenditVARequest {
  * Create Xendit Virtual Account (Dynamic)
  * API: POST /callback_virtual_accounts
  * Docs: https://developers.xendit.co/api-reference/#create-fixed-virtual-accounts
+ * 
+ * ✅ V18: Now calls getXenditClient() for explicit validation
  */
 export async function createXenditVirtualAccount(data: XenditVARequest) {
-  const { baseUrl } = XENDIT_CONFIG
+  // V18: Generate request ID for tracking
+  const requestId = `VA-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
   
   try {
+    // V18 PHASE 3: Validate Xendit client before proceeding
+    const config = getXenditClient()
+    const { baseUrl } = config
+    
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('🔵 XENDIT CREATE VIRTUAL ACCOUNT')
+    console.log('🔵 V18 XENDIT CREATE VIRTUAL ACCOUNT')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log('📦 Request Data:', data)
+    console.log('📦 Request ID:', requestId)
     
     // Calculate expiry (24 hours from now)
     const expiryDate = new Date()
@@ -184,7 +244,6 @@ export async function createXenditVirtualAccount(data: XenditVARequest) {
     }
     
     console.log('📤 Xendit API Request Body:', requestBody)
-    console.log('   Request ID:', requestId)
     
     // V17: Add timeout to prevent hanging requests
     const controller = new AbortController()
@@ -273,8 +332,9 @@ export async function createXenditVirtualAccount(data: XenditVARequest) {
     
   } catch (error) {
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error('💥 XENDIT VA CREATION ERROR - V11 ENHANCED')
+    console.error('💥 V18 XENDIT VA CREATION ERROR')
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('   Request ID:', requestId)
     console.error('🐞 Error Type:', error instanceof Error ? error.constructor.name : typeof error)
     console.error('🐞 Error Message:', error instanceof Error ? error.message : String(error))
     console.error('🐞 Error Stack:', error instanceof Error ? error.stack : 'No stack trace')
@@ -284,11 +344,8 @@ export async function createXenditVirtualAccount(data: XenditVARequest) {
     console.error('   Environment:', XENDIT_CONFIG.environment)
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      errorType: error instanceof Error ? error.constructor.name : typeof error,
-    }
+    // V18: Re-throw error to allow V17 handler to catch it properly
+    throw error
   }
 }
 
@@ -308,15 +365,23 @@ export interface XenditEWalletRequest {
  * Create Xendit E-Wallet Charge
  * API: POST /ewallets/charges
  * Docs: https://developers.xendit.co/api-reference/#create-ewallet-charge
+ * 
+ * ✅ V18: Now calls getXenditClient() for explicit validation
  */
 export async function createXenditEWallet(data: XenditEWalletRequest) {
-  const { baseUrl } = XENDIT_CONFIG
+  // V18: Generate request ID for tracking
+  const requestId = `EW-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
   
   try {
+    // V18 PHASE 3: Validate Xendit client before proceeding
+    const config = getXenditClient()
+    const { baseUrl } = config
+    
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('💳 XENDIT CREATE E-WALLET CHARGE')
+    console.log('💳 V18 XENDIT CREATE E-WALLET CHARGE')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log('📦 Request Data:', data)
+    console.log('📦 Request ID:', requestId)
     
     // Get base URL from environment or use localhost for development
     const baseAppUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -387,8 +452,9 @@ export async function createXenditEWallet(data: XenditEWalletRequest) {
     
   } catch (error) {
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error('💥 XENDIT E-WALLET CREATION ERROR - V11 ENHANCED')
+    console.error('💥 V18 XENDIT E-WALLET CREATION ERROR')
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('   Request ID:', requestId)
     console.error('🐞 Error Type:', error instanceof Error ? error.constructor.name : typeof error)
     console.error('🐞 Error Message:', error instanceof Error ? error.message : String(error))
     console.error('🐞 Error Stack:', error instanceof Error ? error.stack : 'No stack trace')
@@ -398,11 +464,8 @@ export async function createXenditEWallet(data: XenditEWalletRequest) {
     console.error('   Environment:', XENDIT_CONFIG.environment)
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      errorType: error instanceof Error ? error.constructor.name : typeof error,
-    }
+    // V18: Re-throw error to allow V17 handler to catch it properly
+    throw error
   }
 }
 
