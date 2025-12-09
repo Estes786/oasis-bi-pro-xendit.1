@@ -184,17 +184,64 @@ export async function createXenditVirtualAccount(data: XenditVARequest) {
     }
     
     console.log('📤 Xendit API Request Body:', requestBody)
+    console.log('   Request ID:', requestId)
     
-    const response = await fetch(`${baseUrl}/callback_virtual_accounts`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': getXenditAuthHeader(),
-      },
-      body: JSON.stringify(requestBody),
-    })
+    // V17: Add timeout to prevent hanging requests
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
     
-    const result = await response.json()
+    let response: Response
+    try {
+      response = await fetch(`${baseUrl}/callback_virtual_accounts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': getXenditAuthHeader(),
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal,
+      })
+    } catch (fetchError) {
+      clearTimeout(timeoutId)
+      
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.error('⏱️ V17 XENDIT VA TIMEOUT ERROR')
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.error('   Request ID:', requestId)
+        console.error('   Error: Request timed out after 30 seconds')
+        console.error('   Bank Code:', data.bankCode)
+        console.error('   Amount:', data.expectedAmount)
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        throw new Error('Xendit API timeout - Request took longer than 30 seconds')
+      }
+      
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('🌐 V17 XENDIT VA NETWORK ERROR')
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('   Request ID:', requestId)
+      console.error('   Error:', fetchError instanceof Error ? fetchError.message : String(fetchError))
+      console.error('   Base URL:', baseUrl)
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      throw fetchError
+    } finally {
+      clearTimeout(timeoutId)
+    }
+    
+    // V17: Safe JSON parsing
+    let result: any
+    try {
+      result = await response.json()
+    } catch (jsonError) {
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('📄 V17 XENDIT VA JSON PARSE ERROR')
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('   Request ID:', requestId)
+      console.error('   Status Code:', response.status)
+      console.error('   Error:', jsonError instanceof Error ? jsonError.message : String(jsonError))
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      throw new Error(`Failed to parse Xendit response: ${jsonError instanceof Error ? jsonError.message : 'Invalid JSON'}`)
+    }
     
     console.log('📥 Xendit Response:', result)
     console.log('   Status Code:', response.status)

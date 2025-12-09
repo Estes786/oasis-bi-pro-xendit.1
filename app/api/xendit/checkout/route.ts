@@ -18,23 +18,63 @@ import {
 } from '@/lib/xendit'
 
 export async function POST(request: NextRequest) {
+  // V17: Generate request ID for tracking
+  const requestId = `REQ-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+  
   try {
-    const body = await request.json()
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('🔵 V17 CHECKOUT REQUEST STARTED')
+    console.log('   Request ID:', requestId)
+    console.log('   Timestamp:', new Date().toISOString())
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    
+    // V17: Safe JSON parsing with explicit error handling
+    let body: any
+    try {
+      body = await request.json()
+    } catch (parseError) {
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('❌ V17 JSON PARSE ERROR')
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('   Request ID:', requestId)
+      console.error('   Error:', parseError instanceof Error ? parseError.message : String(parseError))
+      console.error('   Stack:', parseError instanceof Error ? parseError.stack : 'No stack trace')
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Invalid JSON in request body',
+          requestId,
+          timestamp: new Date().toISOString()
+        },
+        { status: 400 }
+      )
+    }
     
     // Validate required fields
     const { planId, email, phoneNumber, customerName, userId, paymentMethod = 'va', bankCode = 'BCA', ewalletType } = body
     
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('🛒 XENDIT CHECKOUT REQUEST RECEIVED - V10 DEBUG')
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('🛒 XENDIT CHECKOUT REQUEST RECEIVED - V17 ENHANCED')
+    console.log('   Request ID:', requestId)
     console.log('📦 Full Request Body:', JSON.stringify(body, null, 2))
     console.log('📦 Parsed Data:', { planId, email, phoneNumber, customerName, userId, paymentMethod, bankCode, ewalletType })
     
     if (!planId || !phoneNumber || !customerName) {
+      console.error('❌ V17 VALIDATION ERROR: Missing required fields')
+      console.error('   Request ID:', requestId)
+      console.error('   Missing:', {
+        planId: !planId,
+        phoneNumber: !phoneNumber,
+        customerName: !customerName
+      })
+      
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Missing required fields: planId, phoneNumber, customerName' 
+          error: 'Missing required fields: planId, phoneNumber, customerName',
+          requestId,
+          timestamp: new Date().toISOString()
         },
         { status: 400 }
       )
@@ -42,10 +82,18 @@ export async function POST(request: NextRequest) {
 
     // Validate plan exists
     if (!SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS]) {
+      console.error('❌ V17 VALIDATION ERROR: Invalid plan ID')
+      console.error('   Request ID:', requestId)
+      console.error('   Received planId:', planId)
+      console.error('   Valid planIds:', Object.keys(SUBSCRIPTION_PLANS))
+      
       return NextResponse.json(
         { 
           success: false, 
-          error: `Invalid plan ID: ${planId}` 
+          error: `Invalid plan ID: ${planId}`,
+          requestId,
+          validPlans: Object.keys(SUBSCRIPTION_PLANS),
+          timestamp: new Date().toISOString()
         },
         { status: 400 }
       )
@@ -80,11 +128,24 @@ export async function POST(request: NextRequest) {
       result = await createXenditEWallet(ewalletRequest)
       
       if (!result.success) {
-        console.error('❌ Xendit E-Wallet API call failed:', result.error)
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.error('❌ V17 XENDIT E-WALLET API CALL FAILED')
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.error('   Request ID:', requestId)
+        console.error('   Error:', result.error)
+        console.error('   Error Type:', result.errorType)
+        console.error('   External ID:', externalId)
+        console.error('   E-Wallet Type:', ewalletType)
+        console.error('   Amount:', plan.price)
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        
         return NextResponse.json(
           { 
             success: false, 
-            error: result.error 
+            error: result.error,
+            errorType: result.errorType,
+            requestId,
+            timestamp: new Date().toISOString()
           },
           { status: 500 }
         )
@@ -109,11 +170,24 @@ export async function POST(request: NextRequest) {
       result = await createXenditVirtualAccount(vaRequest)
       
       if (!result.success) {
-        console.error('❌ Xendit VA API call failed:', result.error)
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.error('❌ V17 XENDIT VA API CALL FAILED')
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.error('   Request ID:', requestId)
+        console.error('   Error:', result.error)
+        console.error('   Error Type:', result.errorType)
+        console.error('   External ID:', externalId)
+        console.error('   Bank Code:', bankCode)
+        console.error('   Amount:', plan.price)
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        
         return NextResponse.json(
           { 
             success: false, 
-            error: result.error 
+            error: result.error,
+            errorType: result.errorType,
+            requestId,
+            timestamp: new Date().toISOString()
           },
           { status: 500 }
         )
@@ -183,7 +257,8 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('✅ XENDIT CHECKOUT COMPLETED SUCCESSFULLY')
+    console.log('✅ V17 XENDIT CHECKOUT COMPLETED SUCCESSFULLY')
+    console.log('   Request ID:', requestId)
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log('📦 RESPONSE DATA BEING SENT TO FRONTEND:')
     console.log(JSON.stringify(responseData, null, 2))
@@ -191,17 +266,39 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: responseData
+      data: responseData,
+      requestId,
+      timestamp: new Date().toISOString()
     })
 
   } catch (error) {
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error('💥 CHECKOUT ERROR - V11 ENHANCED LOGGING')
+    console.error('💥 V17 CRITICAL: UNHANDLED CHECKOUT ERROR')
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error('🐞 Error Type:', error instanceof Error ? error.constructor.name : typeof error)
-    console.error('🐞 Error Message:', error instanceof Error ? error.message : String(error))
-    console.error('🐞 Error Stack:', error instanceof Error ? error.stack : 'No stack trace')
-    console.error('📦 Full Error Object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+    console.error('📋 Request Context:')
+    console.error('   Request ID:', requestId)
+    console.error('   Timestamp:', new Date().toISOString())
+    console.error('   URL:', request.url)
+    console.error('   Method:', request.method)
+    console.error('')
+    console.error('🐞 Error Details:')
+    console.error('   Type:', error instanceof Error ? error.constructor.name : typeof error)
+    console.error('   Message:', error instanceof Error ? error.message : String(error))
+    console.error('')
+    console.error('📚 Stack Trace:')
+    console.error(error instanceof Error ? error.stack : 'No stack trace available')
+    console.error('')
+    console.error('📦 Full Error Object:')
+    try {
+      console.error(JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+    } catch (stringifyError) {
+      console.error('   [Error object could not be stringified]')
+    }
+    console.error('')
+    console.error('🔧 Environment Info:')
+    console.error('   NODE_ENV:', process.env.NODE_ENV)
+    console.error('   XENDIT_SECRET_KEY:', process.env.XENDIT_SECRET_KEY ? 'Set' : 'Missing')
+    console.error('   SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing')
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     
     return NextResponse.json(
@@ -209,7 +306,9 @@ export async function POST(request: NextRequest) {
         success: false, 
         error: error instanceof Error ? error.message : 'Internal server error',
         errorType: error instanceof Error ? error.constructor.name : typeof error,
-        timestamp: new Date().toISOString()
+        requestId,
+        timestamp: new Date().toISOString(),
+        message: 'An unexpected error occurred. Please contact support with the Request ID.'
       },
       { status: 500 }
     )

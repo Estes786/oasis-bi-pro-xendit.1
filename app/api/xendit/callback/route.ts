@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log('🔔 V16 XENDIT CALLBACK RECEIVED')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('📦 Full Payload (V16 Enhanced Logging):')
+    console.log('📦 Full Payload (V17 Enhanced Logging):')
     console.log(JSON.stringify(body, null, 2))
     console.log('   Timestamp:', new Date().toISOString())
     console.log('   Headers:', {
