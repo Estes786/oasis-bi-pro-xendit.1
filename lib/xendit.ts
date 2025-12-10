@@ -9,40 +9,60 @@
  * Xendit API Authentication: Basic Auth with Secret Key as username
  */
 
-// ✅ V20 ENVIRONMENT PURGE - NO MODULE-LEVEL CONFIG CACHING
+// ✅ V21 FINAL FIX - EXPLICIT SANDBOX MODE WITH BASE URL HARDCODE
 // Config is loaded fresh on every getXenditClient() call
-// V20: Removed XENDIT_CONFIG global to eliminate NODE_ENV conflicts
+// V21: Forces sandbox mode explicitly regardless of NODE_ENV
 
 /**
- * ✅ V20 CRITICAL: BRUTAL SANDBOX LOCKIN & ENVIRONMENT PURGE
+ * ✅ V21 CRITICAL: BRUTAL SANDBOX LOCKIN WITH EXPLICIT ENVIRONMENT
  * Explicit validation BEFORE client initialization
  * This function MUST be called explicitly in request handlers
- * V20: FORCES sandbox-only operation, kills app if production key detected
+ * V21: FORCES sandbox-only operation with explicit environment override
+ * 
+ * ROOT CAUSE ANALYSIS:
+ * - Vercel/Next.js automatically sets NODE_ENV=production during build
+ * - Xendit API validates environment consistency between NODE_ENV and key type
+ * - xnd_development_ keys are ONLY valid when environment is explicitly "test"
+ * 
+ * V21 FIX:
+ * - Ignore NODE_ENV completely
+ * - Force environment: 'test' explicitly
+ * - Validate key starts with xnd_development_
+ * - Use default Xendit base URL (https://api.xendit.co)
  */
 export function getXenditClient() {
   const secretKey = process.env.XENDIT_SECRET_KEY || ''
   
-  // V20 CRITICAL FIX: Brutal Sandbox Validation
+  // V21 CRITICAL FIX: Brutal Sandbox Validation
   if (!secretKey || secretKey.trim() === '') {
-    console.error('🔥🔥 V20: FATAL - XENDIT_SECRET_KEY is missing.')
-    throw new Error('FATAL V20: XENDIT_SECRET_KEY is missing.')
+    console.error('🔥🔥 V21: FATAL - XENDIT_SECRET_KEY is missing.')
+    throw new Error('FATAL V21: XENDIT_SECRET_KEY is missing.')
   }
   
   if (!secretKey.startsWith('xnd_development_')) {
-    console.error('🔥🔥 V20 SANDBOX VIOLATION DETECTED 🔥🔥')
+    console.error('🔥🔥 V21 SANDBOX VIOLATION DETECTED 🔥🔥')
     console.error(`Attempted Key: ${secretKey.substring(0, 20)}...`)
-    throw new Error('FATAL V20: Kunci Production terdeteksi! (Harus xnd_development_...).')
+    throw new Error('FATAL V21: Kunci Production terdeteksi! (Harus xnd_development_...).')
   }
   
-  console.log('🔥🔥 V20: SANDBOX LOCK-IN AKTIF. MENGGUNAKAN KUNCI DEVELOPMENT. 🔥🔥')
+  // V21 CRITICAL: Log environment state for diagnostics
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('🔥🔥 V21: SANDBOX LOCK-IN AKTIF 🔥🔥')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('🔑 Secret Key Type:', secretKey.substring(0, 20) + '...')
+  console.log('🌍 NODE_ENV (Ignored):', process.env.NODE_ENV)
+  console.log('🔧 XENDIT_ENV (Override):', 'test')
+  console.log('🌐 Base URL:', 'https://api.xendit.co (default)')
+  console.log('✅ Environment Mode: SANDBOX (FORCED)')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   
-  // Return validated config
+  // Return validated config with FORCED sandbox environment
   return {
     secretKey: secretKey,
     webhookToken: process.env.XENDIT_WEBHOOK_TOKEN || '',
-    environment: 'test',
-    nodeEnv: process.env.NODE_ENV || 'development',
-    baseUrl: process.env.XENDIT_BASE_URL || 'https://api.xendit.co',
+    environment: 'test', // V21 FIX: Force sandbox mode regardless of NODE_ENV
+    nodeEnv: 'development', // V21 FIX: Override NODE_ENV for Xendit compatibility
+    baseUrl: 'https://api.xendit.co', // V21 FIX: Use default Xendit API URL
   }
 }
 

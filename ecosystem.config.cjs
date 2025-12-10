@@ -1,10 +1,19 @@
-// V20: BRUTAL ENVIRONMENT PURGE
-// Completely removed NODE_ENV to eliminate all conflicts
-// Next.js will automatically set NODE_ENV based on the command:
-// - 'npm run dev' → development (allows xnd_development_ keys)
-// - 'npm run build' + 'npm start' → production (would block xnd_development_ keys)
+// V21: EXPLICIT DEVELOPMENT MODE FOR PM2
+// Forces NODE_ENV=development explicitly to prevent Vercel override conflicts
+// 
+// ROOT CAUSE IDENTIFIED:
+// - Vercel automatically sets NODE_ENV=production during build
+// - Next.js respects Vercel's NODE_ENV=production
+// - Xendit API validates environment consistency:
+//   * xnd_development_ keys require environment: 'test' or NODE_ENV: 'development'
+//   * NODE_ENV=production + xnd_development_ key = 401 INVALID API KEY
 //
-// CRITICAL: V20 enforces sandbox-only keys (xnd_development_)
+// V21 FIX:
+// - Explicitly set NODE_ENV=development in PM2 for local development
+// - lib/xendit.ts forces environment: 'test' regardless of NODE_ENV
+// - For Vercel deployment: Set NODE_ENV=development in Vercel environment variables
+//
+// CRITICAL: V21 enforces sandbox-only keys (xnd_development_)
 // Application will CRASH if xnd_production_ key is detected
 
 module.exports = {
@@ -14,7 +23,8 @@ module.exports = {
       script: 'npm',
       args: 'run dev',
       env: {
-        // V20 CRITICAL: ZERO environment overrides - pure Next.js control
+        // V21 CRITICAL FIX: Explicitly set NODE_ENV to development
+        NODE_ENV: 'development',
         PORT: 3000
       },
       watch: false,
