@@ -1,45 +1,66 @@
 /**
- * XENDIT CHECKOUT API ROUTE
+ * 🔥 XENDIT CHECKOUT API PROXY - V25
  * POST /api/xendit/checkout
  * 
- * Purpose: Create payment request (VA or E-Wallet) for SUBSCRIPTION BILLING ONLY
- * This is NOT for processing third-party payments
- * We are collecting OUR subscription fees from OUR customers
+ * Purpose: Proxy requests to Supabase Edge Function (xendit-payment-1)
+ * Architecture: Next.js → Edge Function → Xendit API
+ * This isolates Xendit calls from Next.js production environment
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { 
-  createXenditVirtualAccount,
-  createXenditEWallet,
-  generateExternalId,
-  SUBSCRIPTION_PLANS,
-  type XenditVARequest,
-  type XenditEWalletRequest
-} from '@/lib/xendit'
+
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+
+const EDGE_FUNCTION_URL = 
+  process.env.SUPABASE_FUNCTION_URL || 
+  'https://cdwzivzaxvdossmwbwkl.supabase.co/functions/v1/xendit-payment-1'
+
+const SUPABASE_ANON_KEY = 
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
+  process.env.SUPABASE_ANON_KEY || 
+  'sb_publishable_NRpbZ9WyiPS6lx45tYaImA_Oz2aJVTp'
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface CheckoutRequest {
+  planId: string
+  email: string
+  phoneNumber: string
+  customerName: string
+  userId?: string
+  paymentMethod?: 'va' | 'ewallet'
+  channelCode?: string
+  bankCode?: string
+  ewalletType?: string
+}
+
+// ============================================================================
+// MAIN HANDLER
+// ============================================================================
 
 export async function POST(request: NextRequest) {
-  // V17: Generate request ID for tracking
-  const requestId = `REQ-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+  const requestId = `PROXY-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
   
   try {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('🔵 V17 CHECKOUT REQUEST STARTED')
+    console.log('🔵 V25 PROXY REQUEST STARTED')
     console.log('   Request ID:', requestId)
+    console.log('   Edge Function URL:', EDGE_FUNCTION_URL)
     console.log('   Timestamp:', new Date().toISOString())
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     
-    // V17: Safe JSON parsing with explicit error handling
-    let body: any
+    // Parse request body
+    let body: CheckoutRequest
     try {
       body = await request.json()
     } catch (parseError) {
-      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-      console.error('❌ V17 JSON PARSE ERROR')
-      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('❌ V25 PROXY: JSON Parse Error')
       console.error('   Request ID:', requestId)
       console.error('   Error:', parseError instanceof Error ? parseError.message : String(parseError))
-      console.error('   Stack:', parseError instanceof Error ? parseError.stack : 'No stack trace')
-      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
       
       return NextResponse.json(
         { 
@@ -52,22 +73,14 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Validate required fields
-    const { planId, email, phoneNumber, customerName, userId, paymentMethod = 'va', bankCode = 'BCA', ewalletType } = body
+    console.log('📦 Received Request Body:', JSON.stringify(body, null, 2))
     
-    console.log('🛒 XENDIT CHECKOUT REQUEST RECEIVED - V17 ENHANCED')
-    console.log('   Request ID:', requestId)
-    console.log('📦 Full Request Body:', JSON.stringify(body, null, 2))
-    console.log('📦 Parsed Data:', { planId, email, phoneNumber, customerName, userId, paymentMethod, bankCode, ewalletType })
+    // Validate required fields
+    const { planId, email, phoneNumber, customerName, paymentMethod = 'va', bankCode, ewalletType } = body
     
     if (!planId || !phoneNumber || !customerName) {
-      console.error('❌ V17 VALIDATION ERROR: Missing required fields')
+      console.error('❌ V25 PROXY: Validation Error - Missing required fields')
       console.error('   Request ID:', requestId)
-      console.error('   Missing:', {
-        planId: !planId,
-        phoneNumber: !phoneNumber,
-        customerName: !customerName
-      })
       
       return NextResponse.json(
         { 
@@ -79,243 +92,142 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
-    // Validate plan exists
-    if (!SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS]) {
-      console.error('❌ V17 VALIDATION ERROR: Invalid plan ID')
+    
+    // Map channelCode based on payment method and bank/ewallet selection
+    let channelCode = body.channelCode
+    
+    if (!channelCode) {
+      if (paymentMethod === 'va') {
+        // Map bankCode to channelCode for VA
+        const bankCodeUpper = (bankCode || 'BCA').toUpperCase()
+        channelCode = `${bankCodeUpper}_VIRTUAL_ACCOUNT`
+      } else if (paymentMethod === 'ewallet') {
+        // Map ewalletType to channelCode
+        const ewalletMap: Record<string, string> = {
+          'OVO': 'ID_OVO',
+          'GOPAY': 'ID_GOPAY',
+          'DANA': 'ID_DANA',
+          'LINKAJA': 'ID_LINKAJA',
+          'SHOPEEPAY': 'ID_SHOPEEPAY'
+        }
+        channelCode = ewalletMap[(ewalletType || 'OVO').toUpperCase()] || 'ID_OVO'
+      }
+    }
+    
+    // Prepare Edge Function request
+    const edgeFunctionPayload = {
+      planId,
+      email: email || `${phoneNumber}@oasis-bi.com`, // Default email if not provided
+      phoneNumber,
+      customerName,
+      paymentMethod,
+      channelCode,
+    }
+    
+    console.log('🚀 Forwarding to Edge Function:', edgeFunctionPayload)
+    
+    // Call Edge Function
+    const edgeResponse = await fetch(EDGE_FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify(edgeFunctionPayload),
+    })
+    
+    const edgeResponseData = await edgeResponse.json()
+    
+    console.log('📥 Edge Function Response:', {
+      status: edgeResponse.status,
+      statusText: edgeResponse.statusText,
+      data: edgeResponseData,
+    })
+    
+    if (!edgeResponse.ok) {
+      console.error('❌ V25 PROXY: Edge Function Error')
       console.error('   Request ID:', requestId)
-      console.error('   Received planId:', planId)
-      console.error('   Valid planIds:', Object.keys(SUBSCRIPTION_PLANS))
+      console.error('   Status:', edgeResponse.status)
+      console.error('   Response:', edgeResponseData)
       
       return NextResponse.json(
         { 
           success: false, 
-          error: `Invalid plan ID: ${planId}`,
+          error: edgeResponseData.error || 'Edge Function call failed',
           requestId,
-          validPlans: Object.keys(SUBSCRIPTION_PLANS),
           timestamp: new Date().toISOString()
         },
-        { status: 400 }
+        { status: edgeResponse.status || 500 }
       )
     }
-
-    const plan = SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS]
-    console.log('✅ Plan validated:', plan.name, '-', plan.price, 'IDR')
     
-    // Generate unique external ID
-    const externalId = generateExternalId(planId)
-    console.log('🔑 Generated External ID:', externalId)
-    
-    console.log('📤 Calling Xendit API...')
-    console.log('💳 Payment Method:', paymentMethod)
-    
-    // Call Xendit API based on payment method
-    let result: any
-    
-    if (paymentMethod === 'ewallet') {
-      // Create E-Wallet charge
-      const ewalletType = body.ewalletType || 'OVO' // Default to OVO if not specified
-      
-      const ewalletRequest: XenditEWalletRequest = {
-        externalId,
-        amount: plan.price,
-        phone: phoneNumber,
-        ewalletType,
-        planId: planId as keyof typeof SUBSCRIPTION_PLANS,
-        userId: userId || undefined,
-      }
-      
-      result = await createXenditEWallet(ewalletRequest)
-      
-      if (!result.success) {
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        console.error('❌ V17 XENDIT E-WALLET API CALL FAILED')
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        console.error('   Request ID:', requestId)
-        console.error('   Error:', result.error)
-        console.error('   Error Type:', result.errorType)
-        console.error('   External ID:', externalId)
-        console.error('   E-Wallet Type:', ewalletType)
-        console.error('   Amount:', plan.price)
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: result.error,
-            errorType: result.errorType,
-            requestId,
-            timestamp: new Date().toISOString()
-          },
-          { status: 500 }
-        )
-      }
-      
-      console.log('✅ E-Wallet Charge Created')
-      console.log('✅ Charge ID:', result.chargeId)
-      console.log('✅ Checkout URL:', result.checkoutUrl)
-      
-    } else {
-      // Default: Create Virtual Account
-      const vaRequest: XenditVARequest = {
-        externalId,
-        bankCode: bankCode.toUpperCase(),
-        name: customerName,
-        email,
-        expectedAmount: plan.price,
-        planId: planId as keyof typeof SUBSCRIPTION_PLANS,
-        userId: userId || undefined,
-      }
-      
-      result = await createXenditVirtualAccount(vaRequest)
-      
-      if (!result.success) {
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        console.error('❌ V17 XENDIT VA API CALL FAILED')
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        console.error('   Request ID:', requestId)
-        console.error('   Error:', result.error)
-        console.error('   Error Type:', result.errorType)
-        console.error('   External ID:', externalId)
-        console.error('   Bank Code:', bankCode)
-        console.error('   Amount:', plan.price)
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: result.error,
-            errorType: result.errorType,
-            requestId,
-            timestamp: new Date().toISOString()
-          },
-          { status: 500 }
-        )
-      }
-
-      console.log('✅ VA Number generated:', result.vaNumber)
-      console.log('✅ Bank Code:', result.bankCode)
-      console.log('✅ Expected Amount:', result.expectedAmount)
-    }
-    
-    // Create pending transaction in database (if userId provided)
-    if (userId) {
-      try {
-        console.log('🔄 Attempting to create pending transaction...')
-        
-        // Verify Supabase environment variables
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-        
-        if (!supabaseUrl || !supabaseServiceKey) {
-          console.error('❌ CRITICAL: Missing Supabase credentials!')
-          console.error('   NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✅ Set' : '❌ Missing')
-          console.error('   SUPABASE_SERVICE_ROLE_KEY:', supabaseServiceKey ? '✅ Set' : '❌ Missing')
-          throw new Error('Missing Supabase environment variables')
-        }
-        
-        console.log('✅ Supabase credentials verified')
-        
-        const { createPendingTransaction } = await import('@/lib/subscription-service')
-        await createPendingTransaction({
-          userId,
-          merchantOrderId: externalId,
-          amount: plan.price,
-          planId
-        })
-        console.log('✅ Pending transaction created in database')
-      } catch (dbError) {
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        console.error('⚠️ DATABASE ERROR (NON-BLOCKING)')
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        console.error('   Error:', dbError)
-        console.error('   Context: Failed to create pending transaction')
-        console.error('   Impact: Payment will proceed, but transaction not logged')
-        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-        // Don't fail the checkout - just log the error
-      }
-    }
-    
-    // Return payment info based on method
-    const responseData: any = {
-      paymentMethod,
-      reference: result.externalId || externalId,
-      externalId,
-      amount: plan.price,
-      planName: plan.name,
-      expiryDate: result.expiryDate,
-    }
-    
-    if (paymentMethod === 'ewallet') {
-      responseData.chargeId = result.chargeId
-      responseData.checkoutUrl = result.checkoutUrl
-      responseData.status = result.status
-    } else {
-      responseData.vaNumber = result.vaNumber
-      responseData.bankCode = result.bankCode
-      responseData.expectedAmount = result.expectedAmount
-    }
-
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('✅ V17 XENDIT CHECKOUT COMPLETED SUCCESSFULLY')
-    console.log('   Request ID:', requestId)
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('📦 RESPONSE DATA BEING SENT TO FRONTEND:')
-    console.log(JSON.stringify(responseData, null, 2))
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-
-    return NextResponse.json({
+    // Format response for frontend compatibility
+    const responseData = {
       success: true,
-      data: responseData,
+      data: {
+        paymentMethod,
+        reference: edgeResponseData.requestId,
+        externalId: edgeResponseData.requestId,
+        amount: edgeResponseData.data?.expected_amount || edgeResponseData.data?.charge_amount,
+        planName: planId.charAt(0).toUpperCase() + planId.slice(1),
+        expiryDate: edgeResponseData.data?.expiration_date,
+        
+        // VA fields
+        ...(paymentMethod === 'va' && {
+          vaNumber: edgeResponseData.data?.account_number,
+          bankCode: edgeResponseData.data?.bank_code,
+          expectedAmount: edgeResponseData.data?.expected_amount,
+        }),
+        
+        // E-Wallet fields
+        ...(paymentMethod === 'ewallet' && {
+          chargeId: edgeResponseData.data?.id,
+          checkoutUrl: edgeResponseData.data?.checkout_url || 
+                        edgeResponseData.data?.actions?.mobile_deeplink_checkout_url ||
+                        edgeResponseData.data?.actions?.desktop_web_checkout_url,
+          status: edgeResponseData.data?.status,
+        }),
+      },
       requestId,
-      timestamp: new Date().toISOString()
-    })
-
+      edgeFunctionRequestId: edgeResponseData.requestId,
+      timestamp: new Date().toISOString(),
+    }
+    
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('✅ V25 PROXY: SUCCESS')
+    console.log('   Request ID:', requestId)
+    console.log('   Response:', JSON.stringify(responseData, null, 2))
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    
+    return NextResponse.json(responseData)
+    
   } catch (error) {
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error('💥 V17 CRITICAL: UNHANDLED CHECKOUT ERROR')
+    console.error('💥 V25 PROXY: CRITICAL ERROR')
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error('📋 Request Context:')
     console.error('   Request ID:', requestId)
-    console.error('   Timestamp:', new Date().toISOString())
-    console.error('   URL:', request.url)
-    console.error('   Method:', request.method)
-    console.error('')
-    console.error('🐞 Error Details:')
-    console.error('   Type:', error instanceof Error ? error.constructor.name : typeof error)
-    console.error('   Message:', error instanceof Error ? error.message : String(error))
-    console.error('')
-    console.error('📚 Stack Trace:')
-    console.error(error instanceof Error ? error.stack : 'No stack trace available')
-    console.error('')
-    console.error('📦 Full Error Object:')
-    try {
-      console.error(JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
-    } catch (stringifyError) {
-      console.error('   [Error object could not be stringified]')
-    }
-    console.error('')
-    console.error('🔧 Environment Info:')
-    console.error('   NODE_ENV:', process.env.NODE_ENV)
-    console.error('   XENDIT_SECRET_KEY:', process.env.XENDIT_SECRET_KEY ? 'Set' : 'Missing')
-    console.error('   SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing')
+    console.error('   Error Type:', error instanceof Error ? error.constructor.name : typeof error)
+    console.error('   Error Message:', error instanceof Error ? error.message : String(error))
+    console.error('   Stack:', error instanceof Error ? error.stack : 'No stack trace')
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error',
-        errorType: error instanceof Error ? error.constructor.name : typeof error,
+        error: error instanceof Error ? error.message : 'Internal proxy error',
         requestId,
-        timestamp: new Date().toISOString(),
-        message: 'An unexpected error occurred. Please contact support with the Request ID.'
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     )
   }
 }
 
+// ============================================================================
 // OPTIONS for CORS
+// ============================================================================
+
 export async function OPTIONS(request: NextRequest) {
   return NextResponse.json(
     {},
@@ -330,42 +242,26 @@ export async function OPTIONS(request: NextRequest) {
   )
 }
 
-// GET endpoint for fetching available payment methods
+// ============================================================================
+// GET endpoint for health check
+// ============================================================================
+
 export async function GET(request: NextRequest) {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('📥 V15 GET: Fetching available payment methods')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  
-  // Return available payment methods for the checkout page
-  const paymentMethods = [
-    {
-      paymentMethod: 'va',
-      paymentName: 'Virtual Account',
-      paymentImage: '/payment-icons/va.png',
-      totalFee: 0,
-      paymentFee: 0,
-      description: 'Transfer via Virtual Account Bank',
-    },
-    {
-      paymentMethod: 'ewallet',
-      paymentName: 'QRIS / E-Wallet',
-      paymentImage: '/payment-icons/qris.png',
-      totalFee: 0,
-      paymentFee: 0,
-      description: 'Bayar dengan QRIS atau E-Wallet',
-    }
-  ]
-  
-  console.log('✅ V15 GET: Returning payment methods:', paymentMethods)
+  console.log('📥 V25 PROXY: Health Check')
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   
   return NextResponse.json({
     success: true,
-    message: 'Xendit Checkout Endpoint - Payment Methods Available',
+    message: 'V25 Xendit Checkout Proxy - Active',
+    edgeFunctionUrl: EDGE_FUNCTION_URL,
+    version: 'V25',
     status: 'Active',
     timestamp: new Date().toISOString(),
-    paymentMethods,
-    note: 'This endpoint returns available payment methods and creates Xendit payment requests',
-    supportedMethods: ['Virtual Account (BCA, Mandiri, BNI, BRI, Permata)', 'E-Wallet (OVO, DANA, LinkAja)'],
+    architecture: 'Next.js Proxy → Supabase Edge Function → Xendit API',
+    supportedMethods: {
+      va: ['BCA', 'BNI', 'BRI', 'Mandiri', 'Permata'],
+      ewallet: ['OVO', 'GoPay', 'Dana', 'LinkAja', 'ShopeePay']
+    }
   })
 }

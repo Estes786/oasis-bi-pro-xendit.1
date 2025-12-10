@@ -6,7 +6,16 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "supabase:login": "supabase login",
+    "supabase:link": "supabase link --project-ref cdwzivzaxvdossmwbwkl",
+    "supabase:status": "supabase functions list",
+    "supabase:deploy": "supabase functions deploy xendit-payment-1 --project-ref cdwzivzaxvdossmwbwkl",
+    "supabase:logs": "supabase functions logs xendit-payment-1",
+    "supabase:logs:tail": "supabase functions logs xendit-payment-1 --tail",
+    "supabase:secrets:list": "supabase secrets list",
+    "test:edge": "curl -L -X POST 'https://cdwzivzaxvdossmwbwkl.supabase.co/functions/v1/xendit-payment-1' -H 'Authorization: Bearer sb_publishable_NRpbZ9WyiPS6lx45tYaImA_Oz2aJVTp' -H 'apikey: sb_publishable_NRpbZ9WyiPS6lx45tYaImA_Oz2aJVTp' -H 'Content-Type: application/json' --data '{\"planId\":\"professional\",\"email\":\"test@example.com\",\"phoneNumber\":\"081234567890\",\"customerName\":\"Test User V25\",\"paymentMethod\":\"va\",\"channelCode\":\"BCA_VIRTUAL_ACCOUNT\"}'",
+    "test:proxy": "curl -X POST 'http://localhost:3000/api/xendit/checkout' -H 'Content-Type: application/json' --data '{\"planId\":\"professional\",\"email\":\"test@example.com\",\"phoneNumber\":\"081234567890\",\"customerName\":\"Test User V25\",\"paymentMethod\":\"va\",\"bankCode\":\"BCA\"}'"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",

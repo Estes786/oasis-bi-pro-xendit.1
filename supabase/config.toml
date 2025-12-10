@@ -1,0 +1,14 @@
+# Supabase Configuration for Oasis BI Pro - Xendit Integration
+# Project: oasis-bi-pro-xendit (V25)
+# Edge Function: xendit-payment-1
+
+[project]
+project_id = "cdwzivzaxvdossmwbwkl"
+
+[functions.xendit-payment-1]
+verify_jwt = false
+import_map = "./import_map.json"
+
+[functions.xendit-payment-1.environment]
+NODE_ENV = "development"
+# XENDIT_SECRET_KEY will be set via: supabase secrets set XENDIT_SECRET_KEY=xxx
