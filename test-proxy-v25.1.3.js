@@ -6,7 +6,7 @@
 const axios = require('axios');
 
 const EDGE_FUNCTION_URL = 'https://cdwzivzaxvdossmwbwkl.supabase.co/functions/v1/xendit-payment-1';
-const SUPABASE_ANON_KEY = 'sb_publishable_NRpbZ9WyiPS6lx45tYaImA_Oz2aJVTp';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkd3ppdnpheHZkb3NzbXdid2tsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxMjA4NjAsImV4cCI6MjA4MDY5Njg2MH0.u4yPiDxrB9r1u-9kqA3Zno5Eyum-rHFv8C6AmP3cJ2Y';
 
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('🧪 V25.1.3 TEST: Direct Edge Function Call');
