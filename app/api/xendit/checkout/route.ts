@@ -145,6 +145,16 @@ export async function POST(request: NextRequest) {
       data: edgeResponseData,
     })
     
+    // 🔍 V25.1.3 DEBUG: Log extracted payment data details
+    console.log('🔍 V25.1.3 DATA EXTRACTION DEBUG:', {
+      hasData: !!edgeResponseData.data,
+      dataKeys: edgeResponseData.data ? Object.keys(edgeResponseData.data) : [],
+      vaNumber: edgeResponseData.data?.account_number,
+      checkoutUrl: edgeResponseData.data?.checkout_url,
+      checkoutUrlActions: edgeResponseData.data?.actions,
+      fullEdgeData: JSON.stringify(edgeResponseData.data, null, 2)
+    })
+    
     if (!edgeResponse.ok) {
       console.error('❌ V25 PROXY: Edge Function Error')
       console.error('   Request ID:', requestId)
@@ -163,6 +173,22 @@ export async function POST(request: NextRequest) {
     }
     
     // Format response for frontend compatibility
+    // 🔍 V25.1.3: Extract checkout_url/VA details from edgeResponseData.data
+    const extractedVANumber = edgeResponseData.data?.account_number;
+    const extractedBankCode = edgeResponseData.data?.bank_code;
+    const extractedCheckoutUrl = edgeResponseData.data?.checkout_url || 
+                                   edgeResponseData.data?.actions?.mobile_deeplink_checkout_url ||
+                                   edgeResponseData.data?.actions?.desktop_web_checkout_url;
+    
+    console.log('🔍 V25.1.3 EXTRACTED VALUES:', {
+      paymentMethod,
+      extractedVANumber,
+      extractedBankCode,
+      extractedCheckoutUrl,
+      hasActions: !!edgeResponseData.data?.actions,
+      actionsKeys: edgeResponseData.data?.actions ? Object.keys(edgeResponseData.data.actions) : []
+    });
+    
     const responseData = {
       success: true,
       data: {
@@ -175,17 +201,15 @@ export async function POST(request: NextRequest) {
         
         // VA fields
         ...(paymentMethod === 'va' && {
-          vaNumber: edgeResponseData.data?.account_number,
-          bankCode: edgeResponseData.data?.bank_code,
+          vaNumber: extractedVANumber,
+          bankCode: extractedBankCode,
           expectedAmount: edgeResponseData.data?.expected_amount,
         }),
         
         // E-Wallet fields
         ...(paymentMethod === 'ewallet' && {
           chargeId: edgeResponseData.data?.id,
-          checkoutUrl: edgeResponseData.data?.checkout_url || 
-                        edgeResponseData.data?.actions?.mobile_deeplink_checkout_url ||
-                        edgeResponseData.data?.actions?.desktop_web_checkout_url,
+          checkoutUrl: extractedCheckoutUrl,
           status: edgeResponseData.data?.status,
         }),
       },
@@ -193,6 +217,15 @@ export async function POST(request: NextRequest) {
       edgeFunctionRequestId: edgeResponseData.requestId,
       timestamp: new Date().toISOString(),
     }
+    
+    // 🔍 V25.1.3: Log final response data structure
+    console.log('🔍 V25.1.3 FINAL RESPONSE DATA:', {
+      hasVANumber: !!responseData.data.vaNumber,
+      hasCheckoutUrl: !!responseData.data.checkoutUrl,
+      vaNumber: responseData.data.vaNumber,
+      checkoutUrl: responseData.data.checkoutUrl,
+      fullResponseData: JSON.stringify(responseData, null, 2)
+    });
     
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log('✅ V25 PROXY: SUCCESS')
